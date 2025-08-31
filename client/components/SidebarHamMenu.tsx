@@ -49,7 +49,7 @@ export default function SidebarHamMenu() {
         aria-label="Sidebar"
       >
         <div className="flex items-center justify-between px-4 py-4 border-b">
-          <span className="font-bold text-lg">Menu</span>
+          <span className="font-bold text-lg text-black">Menu</span>
           <button
             aria-label="Close menu"
             onClick={() => setOpen(false)}
