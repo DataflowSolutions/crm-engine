@@ -9,7 +9,7 @@ import {
 
 export const navItems = [
   { icon: Home, label: "Hem", href: "/" },
-  { icon: LayoutDashboard, label: "Dashboard", href: "/employer/dashboard" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   // { icon: Briefcase, label: "Jobbannonser", href: "/employer/jobs" },
   // { icon: Users, label: "Ansökningar", href: "/employer/applications/all" },
   // {
