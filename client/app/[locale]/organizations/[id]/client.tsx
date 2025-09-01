@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FileText, Clock, CheckCircle, FileStack, Users, Plus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileText, Clock, CheckCircle, FileStack, Users, Plus, ArrowUpDown, ArrowUp, ArrowDown, Upload } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import InteractiveStatusBadge from "./InteractiveStatusBadge";
@@ -127,13 +127,22 @@ export default function OrgDashboardClient({
                   Setup Lead Template
                 </Link>
               ) : (
-                <Link 
-                  href={`/${currentLocale}/organizations/${org.id}/leads/new`}
-                  className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Lead
-                </Link>
+                <>
+                  <Link 
+                    href={`/${currentLocale}/organizations/${org.id}/templates/import`}
+                    className="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Import Leads
+                  </Link>
+                  <Link 
+                    href={`/${currentLocale}/organizations/${org.id}/leads/new`}
+                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Lead
+                  </Link>
+                </>
               )}
               <Link
                 href={`/${currentLocale}/organizations/${org.id}/members`}
@@ -171,6 +180,13 @@ export default function OrgDashboardClient({
             </Link>
             {hasTemplate ? (
               <>
+                <Link 
+                  href={`/${currentLocale}/organizations/${org.id}/templates/import`}
+                  className="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition-colors"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import Leads
+                </Link>
                 <Link 
                   href={`/${currentLocale}/organizations/${org.id}/leads/new`}
                   className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"

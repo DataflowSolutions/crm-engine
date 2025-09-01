@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Plus, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Users } from "lucide-react";
+import { FileText, Plus, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Users, Upload } from "lucide-react";
 import Link from "next/link";
 import TemplateCard from "./TemplateCard";
 
@@ -93,13 +93,22 @@ export default function TemplatesList({
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Lead Templates</h1>
               <p className="text-gray-600">{orgName}</p>
             </div>
-            <Link
-              href={`/${locale}/organizations/${orgId}/templates/new`}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Template
-            </Link>
+            <div className="flex gap-3">
+              <Link
+                href={`/${locale}/organizations/${orgId}/templates/import`}
+                className="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import from Spreadsheet
+              </Link>
+              <Link
+                href={`/${locale}/organizations/${orgId}/templates/new`}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Template
+              </Link>
+            </div>
           </div>
         </div>
 
