@@ -32,18 +32,21 @@ export async function createOrganization(formData: FormData) {
     redirect('/login?message=Please%20log%20in%20to%20create%20an%20organization')
   }
 
-  const { data, error } = await supabase
-    .from('organizations')
-    .insert({ name, owner_id: user.id })
-    .select('id')
-    .single()
+  // 1) create org (owner_id = user.id)
+const { data: org, error: orgErr } = await supabase
+  .from('organizations')
+  .insert({ name, owner_id: user.id })
+  .select('id')
+  .single();
+if (orgErr) redirect(`/organizations/new?error=${encodeURIComponent(orgErr.message)}`);
 
-  console.log('🔹 [createOrganization] insert data:', data)
-  if (error) {
-    console.error('❌ [createOrganization] insert error:', error)
-    redirect(`/organizations/new?error=${encodeURIComponent(error.message)}`)
-  }
+// 2) add owner membership for the creator (allowed by memb_insert policy)
+const { error: memErr } = await supabase
+  .from('memberships')
+  .insert({ user_id: user.id, organization_id: org.id, role: 'owner', accepted: true });
+if (memErr) redirect(`/organizations/new?error=${encodeURIComponent(memErr.message)}`);
 
-  console.log('✅ [createOrganization] created org with id:', data.id)
-  redirect(`/organizations/${data.id}`)
+redirect(`/organizations/${org.id}`);
+
+
 }
