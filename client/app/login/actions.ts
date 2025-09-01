@@ -18,11 +18,12 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
-    redirect('/error')
+    console.error('❌ [login] error:', error)
+    redirect(`/login?message=${encodeURIComponent(error.message)}`)
   }
 
   revalidatePath('/', 'layout')
-  redirect('/')
+  redirect('/organizations')
 }
 
 export async function signup(formData: FormData) {
@@ -35,12 +36,24 @@ export async function signup(formData: FormData) {
     password: formData.get('password') as string,
   }
 
-  const { error } = await supabase.auth.signUp(data)
+  const { data: authData, error } = await supabase.auth.signUp(data)
 
   if (error) {
     redirect('/error')
   }
 
-  revalidatePath('/', 'layout')
-  redirect('/')
+  // Check if email confirmation is required
+  if (authData.user && !authData.session) {
+    // Email confirmation required - redirect to a confirmation page
+    redirect('/login?message=Check your email for confirmation link')
+  }
+
+  // If we have a session, the user is logged in
+  if (authData.session) {
+    revalidatePath('/', 'layout')
+    redirect('/organizations')
+  }
+
+  // Fallback redirect
+  redirect('/login')
 }

@@ -1,6 +1,12 @@
 import { login, signup } from './actions'
 
-export default function LoginPage() {
+export default async function LoginPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ message?: string }> 
+}) {
+  const params = await searchParams
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
@@ -8,6 +14,13 @@ export default function LoginPage() {
         <h1 className="mb-6 text-center text-2xl font-bold text-gray-800">
           Welcome Back 👋
         </h1>
+
+        {/* Message */}
+        {params?.message && (
+          <div className="mb-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+            {decodeURIComponent(params.message)}
+          </div>
+        )}
 
         {/* Form */}
         <form className="space-y-6">

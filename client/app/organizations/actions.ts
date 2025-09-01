@@ -13,17 +13,23 @@ export async function createOrganization(formData: FormData) {
   }
 
   const supabase = await createClient()
+  
+  // First check if we have a session
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+  console.log('🔹 [createOrganization] session:', session ? 'exists' : 'null')
+  if (sessionError) console.error('❌ [createOrganization] getSession error:', sessionError)
+  
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser()
 
-  console.log('🔹 [createOrganization] user:', user)
+  console.log('🔹 [createOrganization] user:', user ? `${user.email} (${user.id})` : 'null')
   if (userError) console.error('❌ [createOrganization] getUser error:', userError)
 
   if (!user) {
     console.warn('⚠️ [createOrganization] No user, redirecting to login')
-    redirect('/login')
+    redirect('/login?message=Please%20log%20in%20to%20create%20an%20organization')
   }
 
   const { data, error } = await supabase
