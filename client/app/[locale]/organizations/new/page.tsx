@@ -1,14 +1,22 @@
-import { createOrganization } from '../actions'
+import { createOrganization } from "../actions";
+import { getTranslations } from "next-intl/server";
 
-export default async function NewOrgPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const params = await searchParams
+export default async function NewOrgPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const t = await getTranslations();
+  const params = await searchParams;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-2xl font-bold text-gray-800">Create organization</h1>
+        <h1 className="mb-2 text-2xl font-bold text-gray-800">
+          {t("Orgs.new.title")}
+        </h1>
         <p className="mb-6 text-sm text-gray-600">
-          This is your workspace for leads, templates, and members.
+          {t("Orgs.new.description")}
         </p>
 
         {params?.error && (
@@ -19,15 +27,18 @@ export default async function NewOrgPage({ searchParams }: { searchParams: Promi
 
         <form className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Organization name
+            <label
+              htmlFor="name"
+              className="block text-sm font-medium text-gray-700"
+            >
+              {t("Orgs.new.nameLabel")}
             </label>
             <input
               id="name"
               name="name"
               type="text"
               required
-              placeholder="Google"
+              placeholder={t("Orgs.new.placeholder")}
               className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none sm:text-sm"
             />
           </div>
@@ -36,10 +47,10 @@ export default async function NewOrgPage({ searchParams }: { searchParams: Promi
             formAction={createOrganization}
             className="w-full rounded-md bg-indigo-600 px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
-            Create
+            {t("Orgs.new.create")}
           </button>
         </form>
       </div>
     </div>
-  )
+  );
 }

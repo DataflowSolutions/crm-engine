@@ -1,5 +1,7 @@
-'use client'
+"use client";
+import { useTranslations } from "next-intl";
 
 export default function ErrorPage() {
-  return <p>Sorry, something went wrong</p>
+  const t = useTranslations();
+  return <p>{t("Errors.unknown")}</p>;
 }

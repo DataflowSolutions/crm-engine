@@ -1,28 +1,33 @@
-import { login, signup } from './actions'
+// app/[locale]/login/page.tsx  (SERVER-komponent)
+import { getTranslations } from "next-intl/server";
+import { login, signup } from "./actions";
 
-export default async function LoginPage({ 
-  searchParams 
-}: { 
-  searchParams: Promise<{ message?: string }> 
+export default async function LoginPage({
+  searchParams,
+}: {
+  // Next ger detta som ett objekt, inte en Promise
+  searchParams?: { message?: string };
 }) {
-  const params = await searchParams
+  const t = await getTranslations(); // ✅ server-API, funkar i async
+  const messageRaw =
+    typeof searchParams?.message === "string"
+      ? searchParams.message
+      : undefined;
+  const message = messageRaw ? decodeURIComponent(messageRaw) : undefined;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        {/* Header */}
         <h1 className="mb-6 text-center text-2xl font-bold text-gray-800">
-          Welcome Back 👋
+          {t("Auth.welcome") /* ex. nyckel i dina messages */}
         </h1>
 
-        {/* Message */}
-        {params?.message && (
+        {message && (
           <div className="mb-4 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
-            {decodeURIComponent(params.message)}
+            {message}
           </div>
         )}
 
-        {/* Form */}
         <form className="space-y-6">
           {/* Email */}
           <div>
@@ -30,7 +35,7 @@ export default async function LoginPage({
               htmlFor="email"
               className="block text-sm font-medium text-gray-700"
             >
-              Email
+              {t("Auth.email")}
             </label>
             <input
               id="email"
@@ -48,7 +53,7 @@ export default async function LoginPage({
               htmlFor="password"
               className="block text-sm font-medium text-gray-700"
             >
-              Password
+              {t("Auth.password")}
             </label>
             <input
               id="password"
@@ -60,42 +65,41 @@ export default async function LoginPage({
             />
           </div>
 
-          {/* Buttons */}
           <div className="flex flex-col gap-3">
             <button
               formAction={login}
               className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white font-semibold shadow-sm transition hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
-              Log in
+              {t("Auth.login.cta")}
             </button>
             <button
               formAction={signup}
               className="w-full rounded-md bg-gray-100 px-4 py-2 font-semibold text-gray-800 shadow-sm transition hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:outline-none"
             >
-              Sign up
+              {t("Auth.signup.cta")}
             </button>
           </div>
         </form>
 
         {/* Footer */}
         <p className="mt-6 text-center text-sm text-gray-500">
-          By continuing, you agree to our{' '}
+          {t("Auth.footer")}{" "}
           <a
             href="#"
             className="font-medium text-indigo-600 hover:text-indigo-500"
           >
-            Terms
-          </a>{' '}
-          and{' '}
+            {t("Auth.terms")}
+          </a>{" "}
+          {t("Auth.and")}{" "}
           <a
             href="#"
             className="font-medium text-indigo-600 hover:text-indigo-500"
           >
-            Privacy Policy
+            {t("Auth.privacy")}
           </a>
           .
         </p>
       </div>
     </div>
-  )
+  );
 }

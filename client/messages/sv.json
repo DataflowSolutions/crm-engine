@@ -1,3 +1,65 @@
 {
-  "Nav:home": "Hem"
+  "Nav": {
+    "home": "Hem",
+    "dashboard": "Instrumentpanel"
+  },
+  "Auth": {
+    "welcome": "Välkommen tillbaka 👋",
+    "email": "E-post",
+    "password": "Lösenord",
+    "login": {
+      "cta": "Logga in"
+    },
+    "signup": {
+      "cta": "Registrera"
+    },
+    "terms": "Villkor",
+    "privacy": "Integritetspolicy",
+    "footer": "Genom att fortsätta godkänner du våra",
+    "and": "och"
+  },
+  "Orgs": {
+    "welcome": "Välkommen tillbaka",
+    "title": "Dina organisationer",
+    "newButton": "Ny organisation",
+    "noOrgs": "Inga organisationer ännu. Skapa din första 👉",
+    "create": "Skapa",
+    "openDashboard": "Öppna instrumentpanel →",
+    "leads": {
+      "cards": {
+        "all": "Alla leads",
+        "approved": "Godkända leads",
+        "scheduled": "Schemalagda leads",
+        "closed": "Stängda leads"
+      },
+      "table": {
+        "title": "Senaste leadsen",
+        "showall": "Visa alla",
+        "name": "Namn",
+        "created": "Skapad",
+        "status": "Status",
+        "overflow": "fler leads"
+      },
+      "badges": {
+        "approved": "Godkänd",
+        "scheduled": "Schemalagd",
+        "closed": "Stängd"
+      }
+    },
+    "new": {
+      "title": "Skapa organisation",
+      "description": "Detta är din arbetsyta för leads, mallar och medlemmar.",
+      "nameLabel": "Organisationsnamn",
+      "placeholder": "Google",
+      "create": "Skapa"
+    }
+  },
+  "Errors": {
+    "unknown": "Tyvärr, något gick fel"
+  },
+  "UI": {
+    "menu": "Meny",
+    "openMenu": "Öppna meny",
+    "closeMenu": "Stäng meny"
+  }
 }

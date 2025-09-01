@@ -3,8 +3,11 @@ import Link from "next/link";
 import { navItems } from "../constants/navItems";
 import { Fragment } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function Sidebar() {
+  const t = useTranslations();
+
   return (
     <Fragment>
       {(() => {
@@ -19,7 +22,7 @@ export default function Sidebar() {
           return (
             <Link
               href={item.href}
-              key={item.label}
+              key={t(item.labelKey)}
               className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer ${
                 isActive
                   ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md hover:text-white"
@@ -30,7 +33,7 @@ export default function Sidebar() {
                 size={20}
                 className={isActive ? "text-white" : "text-blue-500"}
               />
-              <span>{item.label}</span>
+              <span>{t(item.labelKey)}</span>
             </Link>
           );
         });

@@ -3,33 +3,36 @@ import { FileText, Clock, CheckCircle, FileStack } from "lucide-react";
 import Link from "next/link";
 import { mockLeads } from "@/constants/mockLeads";
 import StatusBadge from "@/components/StatusBadge";
+import { useTranslations } from "next-intl";
 
 const UserName = "Joel Frick";
 
-const summary = [
-  {
-    icon: <FileStack className="text-blue-500" size={24} />,
-    label: "Alla leads",
-    value: mockLeads.length,
-  },
-  {
-    icon: <CheckCircle className="text-blue-600" size={24} />,
-    label: "Godkända leads",
-    value: mockLeads.filter((lead) => lead.status === "Godkänd").length,
-  },
-  {
-    icon: <Clock className="text-yellow-500" size={24} />,
-    label: "Schemalagda leads",
-    value: mockLeads.filter((lead) => lead.status === "Schemalagd").length,
-  },
-  {
-    icon: <FileText className="text-gray-500" size={24} />,
-    label: "Stängda leads",
-    value: mockLeads.filter((lead) => lead.status === "Stängd").length,
-  },
-];
-
 export default function LeadDashboard() {
+  const t = useTranslations();
+
+  const summary = [
+    {
+      icon: <FileStack className="text-blue-500" size={24} />,
+      label: t("Orgs.leads.cards.all"),
+      value: mockLeads.length,
+    },
+    {
+      icon: <CheckCircle className="text-blue-600" size={24} />,
+      label: t("Orgs.leads.cards.approved"),
+      value: mockLeads.filter((lead) => lead.status === "Godkänd").length,
+    },
+    {
+      icon: <Clock className="text-yellow-500" size={24} />,
+      label: t("Orgs.leads.cards.scheduled"),
+      value: mockLeads.filter((lead) => lead.status === "Schemalagd").length,
+    },
+    {
+      icon: <FileText className="text-gray-500" size={24} />,
+      label: t("Orgs.leads.cards.closed"),
+      value: mockLeads.filter((lead) => lead.status === "Stängd").length,
+    },
+  ];
+
   return (
     <div className="min-h-screen  bg-gray-50 text-gray-800">
       {/* Navbar */}
@@ -40,7 +43,7 @@ export default function LeadDashboard() {
         {/* Main Content */}
         <main className="flex-1 px-2 md:px-4 py-8">
           <h1 className="text-2xl font-bold mb-6">
-            Välkommen tillbaka, {UserName}!
+            {t("Orgs.welcome")}, {UserName}!
           </h1>
 
           {/* Summary */}
@@ -65,23 +68,29 @@ export default function LeadDashboard() {
 
           {/* Job table */}
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold mb-4">Senaste leadsen</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              {t("Orgs.leads.table.title")}
+            </h2>
             <Link
               href=""
               className="text-blue-600 hover:underline text-sm font-medium"
             >
-              Visa alla
+              {t("Orgs.leads.table.showall")}
             </Link>
           </div>
           <div className="bg-white rounded-2xl shadow overflow-x-auto">
             <table className="min-w-full text-sm table-auto">
               <thead>
                 <tr className="text-left text-black">
-                  <th className="py-4 px-4 whitespace-nowrap">Namn</th>
-                  <th className="py-4 px-4 whitespace-nowrap hidden lg:block">
-                    Skapad
+                  <th className="py-4 px-4 whitespace-nowrap">
+                    {t("Orgs.leads.table.name")}
                   </th>
-                  <th className="py-4 px-4 whitespace-nowrap">Status</th>
+                  <th className="py-4 px-4 whitespace-nowrap hidden lg:block">
+                    {t("Orgs.leads.table.created")}
+                  </th>
+                  <th className="py-4 px-4 whitespace-nowrap">
+                    {t("Orgs.leads.table.status")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -113,7 +122,7 @@ export default function LeadDashboard() {
                         href=""
                         className="text-blue-600 hover:underline font-medium"
                       >
-                        {mockLeads.length - 5} fler jobbannonser
+                        {mockLeads.length - 5} {t("Orgs.leads.table.overflow")}
                       </Link>
                     </td>
                   </tr>

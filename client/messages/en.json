@@ -1,3 +1,65 @@
 {
-  "Nav:home": "Home"
+  "Nav": {
+    "home": "Home",
+    "dashboard": "Dashboard"
+  },
+  "Auth": {
+    "welcome": "Welcome Back 👋",
+    "email": "Email",
+    "password": "Password",
+    "login": {
+      "cta": "Log in"
+    },
+    "signup": {
+      "cta": "Sign up"
+    },
+    "terms": "Terms",
+    "privacy": "Privacy Policy",
+    "footer": "By continuing, you agree to our",
+    "and": "and"
+  },
+  "Orgs": {
+    "welcome": "Welcome back",
+    "title": "Your organizations",
+    "newButton": "New organization",
+    "noOrgs": "No orgs yet. Create your first one 👉",
+    "create": "Create",
+    "openDashboard": "Open dashboard →",
+    "leads": {
+      "cards": {
+        "all": "All leads",
+        "approved": "Approved leads",
+        "scheduled": "Scheduled leads",
+        "closed": "Closed leads"
+      },
+      "table": {
+        "title": "Latest leads",
+        "showall": "Show all",
+        "name": "Name",
+        "created": "Created",
+        "status": "Status",
+        "overflow": "more leads"
+      },
+      "badges": {
+        "approved": "Approved",
+        "scheduled": "Scheduled",
+        "closed": "Closed"
+      }
+    },
+    "new": {
+      "title": "Create organization",
+      "description": "This is your workspace for leads, templates, and members.",
+      "nameLabel": "Organization name",
+      "placeholder": "Google",
+      "create": "Create"
+    }
+  },
+  "Errors": {
+    "unknown": "Sorry, something went wrong"
+  },
+  "UI": {
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  }
 }

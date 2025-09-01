@@ -4,10 +4,12 @@ import { navItems } from "../constants/navItems";
 import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function SidebarHamMenu() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const t = useTranslations();
 
   useEffect(() => {
     if (open) {
@@ -26,7 +28,7 @@ export default function SidebarHamMenu() {
       {!open && (
         <button
           className="md:hidden fixed top-4 right-4 z-50 p-2 rounded-full bg-blue-500 shadow-md"
-          aria-label="Open menu"
+          aria-label={t("UI.openMenu")}
           onClick={() => setOpen((prev) => !prev)}
         >
           <Menu size={28} color="white" />
@@ -49,9 +51,9 @@ export default function SidebarHamMenu() {
         aria-label="Sidebar"
       >
         <div className="flex items-center justify-between px-4 py-4 border-b">
-          <span className="font-bold text-lg text-black">Menu</span>
+          <span className="font-bold text-lg text-black">{t("UI.menu")}</span>
           <button
-            aria-label="Close menu"
+            aria-label={t("UI.closeMenu")}
             onClick={() => setOpen(false)}
             className="p-2 rounded hover:bg-gray-100"
           >
@@ -64,7 +66,7 @@ export default function SidebarHamMenu() {
             return (
               <Link
                 href={item.href}
-                key={item.label}
+                key={t(item.labelKey)}
                 className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors duration-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer ${
                   isActive
                     ? "bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-md hover:text-white"
@@ -76,7 +78,7 @@ export default function SidebarHamMenu() {
                   size={20}
                   className={isActive ? "text-white" : "text-blue-500"}
                 />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </Link>
             );
           })}
