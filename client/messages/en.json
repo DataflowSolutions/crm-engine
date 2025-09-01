@@ -7,6 +7,7 @@
     "welcome": "Welcome Back 👋",
     "email": "Email",
     "password": "Password",
+    "fullName": "Full Name",
     "login": {
       "cta": "Log in"
     },
@@ -17,6 +18,11 @@
     "privacy": "Privacy Policy",
     "footer": "By continuing, you agree to our",
     "and": "and"
+  },
+  "Settings": {
+    "title": "Profile Settings",
+    "emailReadOnly": "Email cannot be changed",
+    "saveChanges": "Save Changes"
   },
   "Orgs": {
     "welcome": "Welcome back",
@@ -46,12 +52,53 @@
         "closed": "Closed"
       }
     },
+    "members": {
+      "title": "Members",
+      "invite": "Invite Member",
+      "inviteEmail": "Email Address",
+      "inviteRole": "Role",
+      "inviteSuccess": "Invite sent successfully",
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin", 
+        "member": "Member",
+        "viewer": "Viewer"
+      },
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "joined": "Joined",
+        "invited": "Invited", 
+        "actions": "Actions"
+      },
+      "actions": {
+        "remove": "Remove",
+        "revoke": "Revoke",
+        "resend": "Resend",
+        "changeRole": "Change Role"
+      },
+      "sections": {
+        "members": "Members",
+        "invites": "Pending Invites"
+      }
+    },
     "new": {
       "title": "Create organization",
       "description": "This is your workspace for leads, templates, and members.",
       "nameLabel": "Organization name",
       "placeholder": "Google",
       "create": "Create"
+    }
+  },
+  "Access": {
+    "denied": {
+      "title": "Access Denied",
+      "notFound": "Organization Not Found",
+      "message": "You don't have permission to access this organization. Contact an administrator to request access.",
+      "notFoundMessage": "This organization doesn't exist or has been removed.",
+      "viewOrgs": "View My Organizations",
+      "goHome": "Go Home",
+      "shareId": "Share this ID with an administrator to request access."
     }
   },
   "Errors": {

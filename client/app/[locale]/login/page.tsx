@@ -1,6 +1,7 @@
 // app/[locale]/login/page.tsx  (SERVER-komponent)
 import { getTranslations } from "next-intl/server";
 import { login, signup } from "./actions";
+import AuthForm from "@/components/AuthForm";
 
 export default async function LoginPage({
   searchParams,
@@ -36,56 +37,7 @@ export default async function LoginPage({
             <input type="hidden" name="redirect" value={redirectTo} />
           )}
           
-          {/* Email */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              {t("Auth.email")}
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              {t("Auth.password")}
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none sm:text-sm"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <button
-              formAction={login}
-              className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white font-semibold shadow-sm transition hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            >
-              {t("Auth.login.cta")}
-            </button>
-            <button
-              formAction={signup}
-              className="w-full rounded-md bg-gray-100 px-4 py-2 font-semibold text-gray-800 shadow-sm transition hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-            >
-              {t("Auth.signup.cta")}
-            </button>
-          </div>
+          <AuthForm login={login} signup={signup} />
         </form>
 
         {/* Footer */}

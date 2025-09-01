@@ -27,26 +27,58 @@ export interface Database {
       memberships: {
         Row: {
           id: string;
-          user_id: string;
+          user_id: string | null;
           organization_id: string;
-          role: 'owner' | 'admin' | 'member';
+          role: 'owner' | 'admin' | 'member' | 'viewer';
+          status: 'invited' | 'accepted' | 'suspended' | 'left';
+          invited_email: string | null;
+          invited_token: string | null;
+          invited_at: string | null;
           accepted: boolean;
           created_at: string | null;
         };
         Insert: {
           id?: string;
-          user_id: string;
+          user_id?: string | null;
           organization_id: string;
-          role?: 'owner' | 'admin' | 'member';
+          role?: 'owner' | 'admin' | 'member' | 'viewer';
+          status?: 'invited' | 'accepted' | 'suspended' | 'left';
+          invited_email?: string | null;
+          invited_token?: string | null;
+          invited_at?: string | null;
           accepted?: boolean;
           created_at?: string | null;
         };
         Update: {
           id?: string;
-          user_id?: string;
+          user_id?: string | null;
           organization_id?: string;
-          role?: 'owner' | 'admin' | 'member';
+          role?: 'owner' | 'admin' | 'member' | 'viewer';
+          status?: 'invited' | 'accepted' | 'suspended' | 'left';
+          invited_email?: string | null;
+          invited_token?: string | null;
+          invited_at?: string | null;
           accepted?: boolean;
+          created_at?: string | null;
+        };
+      };
+      users: {
+        Row: {
+          id: string;
+          email: string;
+          full_name: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          full_name?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          full_name?: string | null;
           created_at?: string | null;
         };
       };
@@ -75,7 +107,20 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      claim_invitation: {
+        Args: {
+          invitation_token: string;
+          user_email: string;
+          user_id_param: string;
+        };
+        Returns: {
+          success: boolean;
+          organization_id?: string;
+          error?: string;
+        };
+      };
+    };
     Enums: Record<string, never>;
   };
 }

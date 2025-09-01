@@ -4,6 +4,7 @@ import { navItems } from "../constants/navItems";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import DarkModeToggle from "./DarkModeToggle";
+import { Settings } from "lucide-react";
 
 export default function Sidebar() {
   const t = useTranslations();
@@ -41,8 +42,19 @@ export default function Sidebar() {
         })()}
       </div>
 
-      {/* Dark Mode Toggle at the bottom */}
-      <DarkModeToggle />
+      {/* Dark Mode Toggle and Settings at the bottom */}
+      <div className="mt-auto pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between px-2">
+          <DarkModeToggle />
+          <Link
+            href="/settings"
+            className="flex items-center justify-center w-8 h-8 rounded-lg transition-colors duration-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+            title={t("Settings.title")}
+          >
+            <Settings size={18} />
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

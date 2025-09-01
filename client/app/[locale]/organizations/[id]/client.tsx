@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { FileText, Clock, CheckCircle, FileStack } from "lucide-react";
+import { FileText, Clock, CheckCircle, FileStack, Users } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import StatusBadge from "@/components/StatusBadge";
 import { useTranslations } from "next-intl";
 
@@ -25,6 +26,8 @@ export default function OrgDashboardClient({
   summary: { totalLeads: number; approved: number; scheduled: number; closed: number };
 }) {
   const t = useTranslations();
+  const params = useParams();
+  const locale = params.locale as string;
   const UserName = "Joel Frick"; // Replace with current user's name if you fetch it
 
   const summaryCards = [
@@ -37,10 +40,24 @@ export default function OrgDashboardClient({
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
       <main className="flex-1 px-2 md:px-4 py-8">
-        <h1 className="text-2xl font-bold mb-1">
-          {t("Orgs.welcome")}, {UserName}!
-        </h1>
-        <p className="text-sm text-gray-500 mb-6">{org.name}</p>
+        {/* Organization Header with Navigation */}
+        <div className="mb-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-2xl font-bold mb-1">
+                {t("Orgs.welcome")}, {UserName}!
+              </h1>
+              <p className="text-sm text-gray-500">{org.name}</p>
+            </div>
+            <Link
+              href={`/${locale}/organizations/${org.id}/members`}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Manage Members
+            </Link>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {summaryCards.map((item) => (

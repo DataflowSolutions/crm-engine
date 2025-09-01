@@ -1,13 +1,13 @@
 // app/organizations/[id]/page.tsx
-import { redirect, notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/app/utils/supabase/server";
 import OrgDashboardClient from "./client";
+import AccessDeniedPage from "./access-denied";
 
-type PageProps = { params: { id: string; locale: string } };
+type PageProps = { params: Promise<{ id: string; locale: string }> };
 
 export default async function Page({ params }: PageProps) {
-  const orgId = params.id;
-  const locale = params.locale;
+  const { id: orgId, locale } = await params;
   const sb = await createClient();
 
   // 1) Require auth
@@ -17,23 +17,25 @@ export default async function Page({ params }: PageProps) {
     redirect(target);
   }
 
-  // 2) Check access by SELECTing the org.
-  //    Thanks to RLS, this only returns a row for owners/admins/accepted members.
+  // 2) Check if user has access via RLS
   const { data: org, error: orgErr } = await sb
     .from("organizations")
     .select("id,name,slug,owner_id,created_at")
     .eq("id", orgId)
     .single();
 
-  // If RLS blocks or row doesn't exist, org is null (or single() throws 406).
-  if (orgErr?.code === "PGRST116" /* No rows */ || !org) {
-    // Up to you: 404 feels fine (don't leak org IDs)
-    notFound();
+  // If RLS blocks access, show appropriate message
+  if (orgErr?.code === "PGRST116" || !org) {
+    // For now, assume org exists if it's a valid UUID and show access denied
+    // In a real implementation, you might want to check with service role
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(orgId);
+    return <AccessDeniedPage locale={locale} orgId={orgId} orgExists={isValidUUID} userEmail={auth.user.email} />;
   }
+  
   if (orgErr) {
-    // Unexpected error -> also 404 (or render an error boundary)
+    // Unexpected error -> show access denied (don't leak technical details)
     console.error("Organization query error:", orgErr);
-    notFound();
+    return <AccessDeniedPage locale={locale} orgId={orgId} orgExists={true} userEmail={auth.user.email} />;
   }
 
   // 3) (Optional) Example of server-side counts you can wire later.

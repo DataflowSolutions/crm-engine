@@ -7,6 +7,7 @@
     "welcome": "Välkommen tillbaka 👋",
     "email": "E-post",
     "password": "Lösenord",
+    "fullName": "Fullständigt namn",
     "login": {
       "cta": "Logga in"
     },
@@ -17,6 +18,11 @@
     "privacy": "Integritetspolicy",
     "footer": "Genom att fortsätta godkänner du våra",
     "and": "och"
+  },
+  "Settings": {
+    "title": "Profilinställningar",
+    "emailReadOnly": "E-post kan inte ändras",
+    "saveChanges": "Spara ändringar"
   },
   "Orgs": {
     "welcome": "Välkommen tillbaka",
@@ -46,12 +52,53 @@
         "closed": "Stängd"
       }
     },
+    "members": {
+      "title": "Medlemmar",
+      "invite": "Bjud in medlem",
+      "inviteEmail": "E-postadress",
+      "inviteRole": "Roll",
+      "inviteSuccess": "Inbjudan skickad",
+      "roles": {
+        "owner": "Ägare",
+        "admin": "Admin",
+        "member": "Medlem", 
+        "viewer": "Läsare"
+      },
+      "table": {
+        "user": "Användare",
+        "role": "Roll",
+        "joined": "Gick med",
+        "invited": "Inbjuden",
+        "actions": "Åtgärder"
+      },
+      "actions": {
+        "remove": "Ta bort",
+        "revoke": "Återkalla",
+        "resend": "Skicka igen",
+        "changeRole": "Ändra roll"
+      },
+      "sections": {
+        "members": "Medlemmar",
+        "invites": "Väntande inbjudningar"
+      }
+    },
     "new": {
       "title": "Skapa organisation",
       "description": "Detta är din arbetsyta för leads, mallar och medlemmar.",
       "nameLabel": "Organisationsnamn",
       "placeholder": "Google",
       "create": "Skapa"
+    }
+  },
+  "Access": {
+    "denied": {
+      "title": "Åtkomst nekad",
+      "notFound": "Organisation hittades inte",
+      "message": "Du har inte behörighet att komma åt denna organisation. Kontakta en administratör för att begära åtkomst.",
+      "notFoundMessage": "Denna organisation existerar inte eller har tagits bort.",
+      "viewOrgs": "Visa mina organisationer",
+      "goHome": "Gå hem",
+      "shareId": "Dela detta ID med en administratör för att begära åtkomst."
     }
   },
   "Errors": {
