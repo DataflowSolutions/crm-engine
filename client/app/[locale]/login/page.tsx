@@ -6,14 +6,16 @@ export default async function LoginPage({
   searchParams,
 }: {
   // Next ger detta som ett objekt, inte en Promise
-  searchParams?: { message?: string };
+  searchParams?: Promise<{ message?: string; redirect?: string }>;
 }) {
   const t = await getTranslations(); // ✅ server-API, funkar i async
+  const resolvedSearchParams = await searchParams;
   const messageRaw =
-    typeof searchParams?.message === "string"
-      ? searchParams.message
+    typeof resolvedSearchParams?.message === "string"
+      ? resolvedSearchParams.message
       : undefined;
   const message = messageRaw ? decodeURIComponent(messageRaw) : undefined;
+  const redirectTo = resolvedSearchParams?.redirect;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -29,6 +31,11 @@ export default async function LoginPage({
         )}
 
         <form className="space-y-6">
+          {/* Hidden field for redirect */}
+          {redirectTo && (
+            <input type="hidden" name="redirect" value={redirectTo} />
+          )}
+          
           {/* Email */}
           <div>
             <label

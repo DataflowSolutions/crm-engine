@@ -41,11 +41,24 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth') &&
-    !request.nextUrl.pathname.startsWith('/error')
+    !request.nextUrl.pathname.startsWith('/error') &&
+    !request.nextUrl.pathname.startsWith('/en/login') &&
+    !request.nextUrl.pathname.startsWith('/sv/login') &&
+    !request.nextUrl.pathname.startsWith('/en/auth') &&
+    !request.nextUrl.pathname.startsWith('/sv/auth')
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    // Extract locale from pathname if it exists
+    const pathSegments = request.nextUrl.pathname.split('/').filter(Boolean)
+    const possibleLocale = pathSegments[0]
+    const isLocaleInPath = ['en', 'sv'].includes(possibleLocale)
+    
+    if (isLocaleInPath) {
+      url.pathname = `/${possibleLocale}/login`
+    } else {
+      url.pathname = '/login'
+    }
     return NextResponse.redirect(url)
   }
 

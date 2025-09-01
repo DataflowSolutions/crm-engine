@@ -3,11 +3,14 @@ import { getTranslations } from "next-intl/server";
 
 export default async function NewOrgPage({
   searchParams,
+  params,
 }: {
   searchParams: Promise<{ error?: string }>;
+  params: { locale: string };
 }) {
   const t = await getTranslations();
-  const params = await searchParams;
+  const searchParamsResolved = await searchParams;
+  const locale = params.locale;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -19,13 +22,16 @@ export default async function NewOrgPage({
           {t("Orgs.new.description")}
         </p>
 
-        {params?.error && (
+        {searchParamsResolved?.error && (
           <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {params.error}
+            {searchParamsResolved.error}
           </div>
         )}
 
         <form className="space-y-4">
+          {/* Hidden field for locale */}
+          <input type="hidden" name="locale" value={locale} />
+          
           <div>
             <label
               htmlFor="name"

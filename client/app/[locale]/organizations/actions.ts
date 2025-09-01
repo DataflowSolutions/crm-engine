@@ -29,7 +29,7 @@ export async function createOrganization(formData: FormData) {
 
   if (!user) {
     console.warn('⚠️ [createOrganization] No user, redirecting to login')
-    redirect('/login?message=Please%20log%20in%20to%20create%20an%20organization')
+    redirect(`/${formData.get('locale') || 'en'}/login?message=Please%20log%20in%20to%20create%20an%20organization`)
   }
 
   // 1) create org (owner_id = user.id)

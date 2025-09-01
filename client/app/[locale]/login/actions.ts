@@ -23,6 +23,13 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
+  
+  // Get redirect URL from URL params if it exists
+  const redirectTo = formData.get('redirect') as string
+  if (redirectTo) {
+    redirect(redirectTo)
+  }
+  
   redirect('/organizations')
 }
 
