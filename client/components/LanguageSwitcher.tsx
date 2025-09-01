@@ -86,7 +86,7 @@ export default function LanguageSwitcher() {
       <button
         ref={buttonRef}
         onClick={handleToggle}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer bg-white border border-gray-200 shadow-sm hover:shadow-md min-w-[120px]"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer bg-white border border-gray-200 shadow-sm hover:shadow-md min-w-[120px] mx-auto"
         aria-label={t("UI.changeLanguage")}
       >
         <Globe size={16} className="text-blue-500" />

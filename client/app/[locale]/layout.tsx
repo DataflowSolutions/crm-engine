@@ -26,7 +26,7 @@ export default async function RootLayout({
             <div>
               <SidebarHamMenu />
             </div>
-            <aside className="hidden md:flex flex-col gap-2 w-64 bg-white border-r p-4 min-h-screen">
+            <aside className="hidden md:flex flex-col gap-2 w-56 bg-white border-r border-black/10 px-4 min-h-screen">
               <Sidebar />
             </aside>
             <div className="flex-1">{children}</div>

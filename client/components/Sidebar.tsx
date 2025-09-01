@@ -9,7 +9,7 @@ export default function Sidebar() {
   const t = useTranslations();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full fixed py-4">
       <div className="flex flex-col gap-2">
         {(() => {
           // Import usePathname at the top: import { usePathname } from "next/navigation";
@@ -42,7 +42,7 @@ export default function Sidebar() {
       </div>
 
       {/* Settings section at the bottom */}
-      <div className="mt-auto space-y-2 sidebar-settings">
+      <div className="mt-auto space-y-2 sidebar-settings ">
         <LanguageSwitcher />
       </div>
     </div>
