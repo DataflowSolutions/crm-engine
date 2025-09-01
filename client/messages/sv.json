@@ -61,7 +61,7 @@
     "menu": "Meny",
     "openMenu": "Öppna meny",
     "closeMenu": "Stäng meny",
-    "darkMode": "Mörkt Läge",
-    "lightMode": "Ljust Läge"
+    "changeLanguage": "Byt Språk",
+    "language": "Språk"
   }
 }

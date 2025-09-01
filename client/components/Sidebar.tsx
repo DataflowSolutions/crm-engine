@@ -3,7 +3,7 @@ import Link from "next/link";
 import { navItems } from "../constants/navItems";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import DarkModeToggle from "./DarkModeToggle";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 export default function Sidebar() {
   const t = useTranslations();
@@ -41,8 +41,10 @@ export default function Sidebar() {
         })()}
       </div>
 
-      {/* Dark Mode Toggle at the bottom */}
-      <DarkModeToggle />
+      {/* Settings section at the bottom */}
+      <div className="mt-auto space-y-2 sidebar-settings">
+        <LanguageSwitcher />
+      </div>
     </div>
   );
 }

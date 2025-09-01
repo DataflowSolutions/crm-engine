@@ -61,7 +61,7 @@
     "menu": "Menu",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "changeLanguage": "Change Language",
+    "language": "Language"
   }
 }
