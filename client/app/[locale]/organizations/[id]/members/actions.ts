@@ -115,17 +115,93 @@ export async function acceptInvite(token: string) {
 
 export async function updateMemberRole(membershipId: string, role: 'owner' | 'admin' | 'member' | 'viewer') {
   const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   
-  // Optional: app-side "cannot demote last owner" check
-  // Fetch org + count owners
+  // Fetch the membership being modified
   const { data: memb, error: mErr } = await sb
     .from('memberships')
-    .select('id, organization_id, role, status')
+    .select('id, organization_id, role, status, user_id')
     .eq('id', membershipId)
     .single();
     
   if (mErr || !memb) throw mErr || new Error('Membership not found');
 
+  // Get organization info to check if current user is the creator/founder
+  const { data: org, error: orgError } = await sb
+    .from('organizations')
+    .select('owner_id')
+    .eq('id', memb.organization_id)
+    .single();
+    
+  if (orgError || !org) throw orgError || new Error('Organization not found');
+
+  const isOrgCreator = org.owner_id === user.id;
+
+  // NO ONE can change their own role (including founders)
+  if (memb.user_id === user.id) {
+    throw new Error('You cannot change your own role');
+  }
+
+  // Organization creator has ultimate power over OTHER members
+  if (isOrgCreator) {
+    // Creator can modify anyone else's role - skip other checks
+  } else {
+    // Get current user's membership to check their role (non-creators follow normal rules)
+    const { data: currentUserMembership, error: currentUserError } = await sb
+      .from('memberships')
+      .select('role, organization_id')
+      .eq('user_id', user.id)
+      .eq('status', 'accepted')
+      .single();
+      
+    if (currentUserError || !currentUserMembership) {
+      throw new Error('You are not a member of this organization');
+    }
+
+    // Helper function to get role hierarchy level (lower number = higher authority)
+    const getRoleLevel = (role: string): number => {
+      switch (role) {
+        case 'owner': return 1;
+        case 'admin': return 2;
+        case 'member': return 3;
+        case 'viewer': return 4;
+        default: return 5;
+      }
+    };
+
+    const currentUserRoleLevel = getRoleLevel(currentUserMembership.role);
+    
+    // Only admin and owner can change roles
+    if (currentUserRoleLevel > 2) {
+      throw new Error('Only admins and owners can change member roles');
+    }
+
+    // Ensure the membership is from the same organization
+    if (memb.organization_id !== currentUserMembership.organization_id) {
+      throw new Error('Cannot modify member from different organization');
+    }
+
+    // Prevent users from changing their own role if they are the owner
+    if (memb.user_id === user.id && memb.role === 'owner') {
+      throw new Error('You cannot change your own role as owner');
+    }
+
+    const targetRoleLevel = getRoleLevel(memb.role);
+    const newRoleLevel = getRoleLevel(role);
+
+    // Cannot modify someone with same or higher authority
+    if (targetRoleLevel <= currentUserRoleLevel && memb.user_id !== user.id) {
+      throw new Error('You cannot modify someone with the same or higher role');
+    }
+
+    // Cannot assign a role equal to or higher than your own (unless you're owner)
+    if (newRoleLevel <= currentUserRoleLevel && currentUserMembership.role !== 'owner') {
+      throw new Error('You cannot assign a role equal to or higher than your own');
+    }
+  }
+
+  // Optional: app-side "cannot demote last owner" check
   if (memb.role === 'owner' && role !== 'owner') {
     const { count } = await sb
       .from('memberships')
@@ -145,16 +221,88 @@ export async function updateMemberRole(membershipId: string, role: 'owner' | 'ad
 
 export async function removeMember(membershipId: string) {
   const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   
-  // Prevent removing last owner
+  // Fetch the membership being removed
   const { data: memb, error: mErr } = await sb
     .from('memberships')
-    .select('id, organization_id, role, status')
+    .select('id, organization_id, role, status, user_id')
     .eq('id', membershipId)
     .single();
     
   if (mErr || !memb) throw mErr || new Error('Membership not found');
 
+  // Get organization info to check if current user is the creator/founder
+  const { data: org, error: orgError } = await sb
+    .from('organizations')
+    .select('owner_id')
+    .eq('id', memb.organization_id)
+    .single();
+    
+  if (orgError || !org) throw orgError || new Error('Organization not found');
+
+  const isOrgCreator = org.owner_id === user.id;
+
+  // NO ONE can remove themselves (including founders)
+  if (memb.user_id === user.id) {
+    throw new Error('You cannot remove yourself');
+  }
+
+  // Organization creator has ultimate power over OTHER members
+  if (isOrgCreator) {
+    // Creator can remove anyone else - skip other permission checks
+  } else {
+    // Get current user's membership to check their role (non-creators follow normal rules)
+    const { data: currentUserMembership, error: currentUserError } = await sb
+      .from('memberships')
+      .select('role, organization_id')
+      .eq('user_id', user.id)
+      .eq('status', 'accepted')
+      .single();
+      
+    if (currentUserError || !currentUserMembership) {
+      throw new Error('You are not a member of this organization');
+    }
+
+    // Helper function to get role hierarchy level (lower number = higher authority)
+    const getRoleLevel = (role: string): number => {
+      switch (role) {
+        case 'owner': return 1;
+        case 'admin': return 2;
+        case 'member': return 3;
+        case 'viewer': return 4;
+        default: return 5;
+      }
+    };
+
+    const currentUserRoleLevel = getRoleLevel(currentUserMembership.role);
+    
+    // Only admin and owner can remove people
+    if (currentUserRoleLevel > 2) {
+      throw new Error('Only admins and owners can remove members');
+    }
+
+    // Ensure the membership is from the same organization
+    if (memb.organization_id !== currentUserMembership.organization_id) {
+      throw new Error('Cannot remove member from different organization');
+    }
+
+    const targetRoleLevel = getRoleLevel(memb.role);
+    const isTargetCurrentUser = memb.user_id === user.id;
+
+    // Prevent users from removing themselves if they are the owner
+    if (isTargetCurrentUser && memb.role === 'owner') {
+      throw new Error('You cannot remove yourself as owner');
+    }
+
+    // Cannot remove someone with same or higher authority
+    if (targetRoleLevel <= currentUserRoleLevel && !isTargetCurrentUser) {
+      throw new Error('You cannot remove someone with the same or higher role');
+    }
+  }
+
+  // Prevent removing last owner (applies to everyone including creators)
   if (memb.role === 'owner' && memb.status === 'accepted') {
     const { count } = await sb
       .from('memberships')

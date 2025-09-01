@@ -6,11 +6,11 @@ export default async function NewOrgPage({
   params,
 }: {
   searchParams: Promise<{ error?: string }>;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
   const t = await getTranslations();
   const searchParamsResolved = await searchParams;
-  const locale = params.locale;
+  const { locale } = await params;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">

@@ -67,15 +67,18 @@ type Org = {
   id: string;
   name: string | null;
   slug: string | null;
+  owner_id: string;
 };
 
 type Props = {
   org: Org;
   memberships: Membership[];
   locale: string;
+  currentUserId: string;
+  isOrgCreator: boolean;
 };
 
-export default function MembersClient({ org, memberships, locale }: Props) {
+export default function MembersClient({ org, memberships, locale, currentUserId, isOrgCreator }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -91,6 +94,100 @@ export default function MembersClient({ org, memberships, locale }: Props) {
       return member.users.length > 0 ? member.users[0] : null;
     }
     return member.users;
+  };
+
+  // Helper function to get role hierarchy level (lower number = higher authority)
+  const getRoleLevel = (role: string): number => {
+    switch (role) {
+      case 'owner': return 1;
+      case 'admin': return 2;
+      case 'member': return 3;
+      case 'viewer': return 4;
+      default: return 5;
+    }
+  };
+
+  // Get current user's membership to determine their role
+  const currentUserMembership = memberships.find(m => m.user_id === currentUserId);
+  const currentUserRole = currentUserMembership?.role || 'viewer';
+  const currentUserRoleLevel = getRoleLevel(currentUserRole);
+
+  // Helper function to check if current user can modify a specific member's role
+  const canModifyMemberRole = (targetMember: Membership): boolean => {
+    const targetRoleLevel = getRoleLevel(targetMember.role);
+    const isTargetCurrentUser = targetMember.user_id === currentUserId;
+    
+    // NO ONE can change their own role (including founders)
+    if (isTargetCurrentUser) {
+      return false;
+    }
+    
+    // Organization creator/founder has ultimate power over all OTHER members
+    if (isOrgCreator) {
+      return true;
+    }
+    
+    // Only admin and owner can change roles
+    if (currentUserRoleLevel > 2) {
+      return false;
+    }
+    
+    // Cannot modify someone with same or higher authority
+    if (targetRoleLevel <= currentUserRoleLevel) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Helper function to get available roles for assignment
+  const getAvailableRoles = (targetMember: Membership): string[] => {
+    if (!canModifyMemberRole(targetMember)) return [targetMember.role];
+    
+    const roles = ['owner', 'admin', 'member', 'viewer'];
+    
+    // Organization creator can assign any role (to others)
+    if (isOrgCreator) {
+      return roles;
+    }
+    
+    // If you're not owner, you can't assign owner or roles equal/higher than yours
+    if (currentUserRole !== 'owner') {
+      return roles.filter(role => {
+        const roleLevel = getRoleLevel(role);
+        return roleLevel > currentUserRoleLevel;
+      });
+    }
+    
+    return roles;
+  };
+
+  // Helper function to check if current user can remove a specific member
+  const canRemoveMember = (targetMember: Membership): boolean => {
+    const targetRoleLevel = getRoleLevel(targetMember.role);
+    const isTargetCurrentUser = targetMember.user_id === currentUserId;
+    
+    // NO ONE can remove themselves (including founders)
+    if (isTargetCurrentUser) {
+      return false;
+    }
+    
+    // Organization creator/founder has ultimate power over all OTHER members
+    if (isOrgCreator) {
+      return true;
+    }
+    
+    // Only admin and owner can remove people
+    if (currentUserRoleLevel > 2) { // not admin or owner
+      return false;
+    }
+    
+    // Cannot remove someone with same or higher authority
+    if (targetRoleLevel <= currentUserRoleLevel) {
+      return false;
+    }
+    
+    return true;
   };
 
   const acceptedMembers = memberships.filter(m => m.status === 'accepted');
@@ -126,6 +223,42 @@ export default function MembersClient({ org, memberships, locale }: Props) {
   };
 
   const handleRoleChange = async (membershipId: string, newRole: 'owner' | 'admin' | 'member' | 'viewer') => {
+    // Find the membership being modified
+    const membership = memberships.find(m => m.id === membershipId);
+    if (!membership) {
+      addToast('Member not found', 'error');
+      return;
+    }
+
+    // Check permissions - NO ONE can change their own role
+    if (membership.user_id === currentUserId) {
+      addToast('You cannot change your own role', 'error');
+      return;
+    }
+
+    // For non-creators, check normal permissions
+    if (!isOrgCreator) {
+      if (currentUserRoleLevel > 2) {
+        addToast('Only admins and owners can change member roles', 'error');
+        return;
+      }
+
+      const targetRoleLevel = getRoleLevel(membership.role);
+      const newRoleLevel = getRoleLevel(newRole);
+
+      // Cannot modify someone with same or higher authority
+      if (targetRoleLevel <= currentUserRoleLevel) {
+        addToast('You cannot modify someone with the same or higher role', 'error');
+        return;
+      }
+
+      // Cannot assign a role equal to or higher than your own (unless you're owner)
+      if (newRoleLevel <= currentUserRoleLevel && currentUserRole !== 'owner') {
+        addToast('You cannot assign a role equal to or higher than your own', 'error');
+        return;
+      }
+    }
+    
     startTransition(async () => {
       try {
         await updateMemberRole(membershipId, newRole);
@@ -139,6 +272,25 @@ export default function MembersClient({ org, memberships, locale }: Props) {
   };
 
   const handleRemove = async (membershipId: string) => {
+    // Find the membership being removed
+    const membership = memberships.find(m => m.id === membershipId);
+    if (!membership) {
+      addToast('Member not found', 'error');
+      return;
+    }
+
+    // Check if current user can remove this member
+    if (!canRemoveMember(membership)) {
+      if (membership.user_id === currentUserId) {
+        addToast('You cannot remove yourself', 'error');
+      } else if (!isOrgCreator && currentUserRoleLevel > 2) {
+        addToast('Only admins and owners can remove members', 'error');
+      } else if (!isOrgCreator) {
+        addToast('You cannot remove someone with the same or higher role', 'error');
+      }
+      return;
+    }
+    
     if (!confirm('Are you sure you want to remove this member?')) return;
     
     startTransition(async () => {
@@ -218,40 +370,86 @@ export default function MembersClient({ org, memberships, locale }: Props) {
             <tbody className="bg-white divide-y divide-gray-200">
               {acceptedMembers.map((member) => {
                 const userData = getUserData(member);
+                const isCurrentUser = member.user_id === currentUserId;
+                const isOwner = member.role === 'owner';
+                const cannotModifySelf = isCurrentUser && isOwner;
+                const canRemove = canRemoveMember(member);
+                const isFounder = member.user_id === org.owner_id;
+                
+                console.log('🔍 [Members] Member debug:', {
+                  memberId: member.id,
+                  status: member.status,
+                  userId: member.user_id,
+                  invitedEmail: member.invited_email,
+                  userData: userData,
+                  rawUsers: member.users,
+                  isCurrentUser,
+                  isOwner,
+                  cannotModifySelf,
+                  canRemove,
+                  currentUserRole,
+                  memberRole: member.role,
+                  isFounder,
+                  isOrgCreator
+                });
                 return (
                 <tr key={member.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {userData?.full_name || userData?.email || 'Unknown User'}
+                        {userData?.full_name || userData?.email || member.invited_email || 'Unknown User'}
+                        {isCurrentUser && <span className="ml-2 text-xs text-blue-600 font-medium">(You)</span>}
+                        {isFounder && <span className="ml-2 text-xs text-purple-600 font-medium">(Founder)</span>}
                       </div>
-                      <div className="text-sm text-gray-500">{userData?.email || 'No email'}</div>
+                      <div className="text-sm text-gray-500">
+                        {userData?.email || member.invited_email || 'No email'}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={member.role}
-                      onChange={(e) => handleRoleChange(member.id, e.target.value as 'owner' | 'admin' | 'member' | 'viewer')}
-                      className="text-sm border rounded px-2 py-1"
-                      disabled={isPending}
-                    >
-                      <option value="owner">Owner</option>
-                      <option value="admin">Admin</option>
-                      <option value="member">Member</option>
-                      <option value="viewer">Viewer</option>
-                    </select>
+                    {(() => {
+                      const canModifyRole = canModifyMemberRole(member);
+                      const availableRoles = getAvailableRoles(member);
+                      
+                      return (
+                        <select
+                          value={member.role}
+                          onChange={(e) => handleRoleChange(member.id, e.target.value as 'owner' | 'admin' | 'member' | 'viewer')}
+                          className={`text-sm border rounded px-2 py-1 ${!canModifyRole ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                          disabled={isPending || !canModifyRole}
+                          title={!canModifyRole ? "You don't have permission to change this role" : ""}
+                        >
+                          {availableRoles.map(role => (
+                            <option key={role} value={role}>
+                              {role.charAt(0).toUpperCase() + role.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleRemove(member.id)}
-                      className="text-red-600 hover:text-red-900"
-                      disabled={isPending}
-                    >
-                      Remove
-                    </button>
+                    {!canRemove ? (
+                      <span className="text-gray-400">
+                        {isCurrentUser && isOwner 
+                          ? "Cannot remove yourself" 
+                          : currentUserRoleLevel > 2 
+                            ? "No permission" 
+                            : "Cannot remove"
+                        }
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleRemove(member.id)}
+                        className="text-red-600 hover:text-red-900"
+                        disabled={isPending}
+                      >
+                        Remove
+                      </button>
+                    )}
                   </td>
                 </tr>
                 );

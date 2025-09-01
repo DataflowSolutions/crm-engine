@@ -1,7 +1,13 @@
 {
   "Nav": {
     "home": "Home",
-    "dashboard": "Dashboard"
+    "organizations": "Organizations",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "leads": "All Leads",
+    "newLead": "Create Lead", 
+    "templates": "Templates",
+    "members": "Members"
   },
   "Auth": {
     "welcome": "Welcome Back 👋",

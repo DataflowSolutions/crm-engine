@@ -1,7 +1,13 @@
 {
   "Nav": {
     "home": "Hem",
-    "dashboard": "Instrumentpanel"
+    "organizations": "Organisationer", 
+    "dashboard": "Instrumentpanel",
+    "settings": "Inställningar",
+    "leads": "Alla Leads",
+    "newLead": "Skapa Lead",
+    "templates": "Mallar",
+    "members": "Medlemmar"
   },
   "Auth": {
     "welcome": "Välkommen tillbaka 👋",

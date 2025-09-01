@@ -19,7 +19,7 @@ export default async function Page({ params }: PageProps) {
   // RLS: Ensure the viewer can read the org
   const { data: org, error: orgErr } = await sb
     .from('organizations')
-    .select('id,name,slug')
+    .select('id,name,slug,owner_id')
     .eq('id', orgId)
     .single();
 
@@ -55,7 +55,17 @@ export default async function Page({ params }: PageProps) {
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false });
 
+  console.log('🔍 [Members Page] Debug info:');
+  console.log('- Memberships error:', memErr);
+  console.log('- Memberships data:', JSON.stringify(memberships, null, 2));
+
   if (memErr) throw memErr;
 
-  return <MembersClient org={org} memberships={memberships ?? []} locale={locale} />;
+  return <MembersClient 
+    org={org} 
+    memberships={memberships ?? []} 
+    locale={locale} 
+    currentUserId={auth.user.id}
+    isOrgCreator={org.owner_id === auth.user.id}
+  />;
 }
