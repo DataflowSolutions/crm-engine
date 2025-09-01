@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import SidebarHamMenu from "@/components/SidebarHamMenu";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
+import { DarkModeProvider } from "@/contexts/DarkModeContext";
 
 export const metadata: Metadata = {
   title: "CRM - Customer Relationship Management",
@@ -22,15 +23,17 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className="flex flex-col min-h-screen">
         <NextIntlClientProvider messages={messages}>
-          <div className="flex">
-            <div>
-              <SidebarHamMenu />
+          <DarkModeProvider>
+            <div className="flex">
+              <div>
+                <SidebarHamMenu />
+              </div>
+              <aside className="hidden md:flex flex-col gap-2 w-64 bg-white border-r p-4 min-h-screen">
+                <Sidebar />
+              </aside>
+              <div className="flex-1">{children}</div>
             </div>
-            <aside className="hidden md:flex flex-col gap-2 w-64 bg-white border-r p-4 min-h-screen">
-              <Sidebar />
-            </aside>
-            <div className="flex-1">{children}</div>
-          </div>
+          </DarkModeProvider>
         </NextIntlClientProvider>
       </body>
     </html>

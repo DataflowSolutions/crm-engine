@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import DarkModeToggle from "./DarkModeToggle";
 
 export default function SidebarHamMenu() {
   const [open, setOpen] = useState(false);
@@ -45,7 +46,7 @@ export default function SidebarHamMenu() {
 
       {/* Sidebar menu - mobile only */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 md:hidden px-2 ${
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 md:hidden px-2 flex flex-col ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Sidebar"
@@ -60,7 +61,7 @@ export default function SidebarHamMenu() {
             <X size={20} className="text-gray-700" />
           </button>
         </div>
-        <div className="flex flex-col gap-1 mt-2">
+        <div className="flex flex-col gap-1 mt-2 flex-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -82,6 +83,11 @@ export default function SidebarHamMenu() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Dark Mode Toggle at the bottom */}
+        <div className="px-2 pb-4">
+          <DarkModeToggle />
         </div>
       </aside>
     </Fragment>

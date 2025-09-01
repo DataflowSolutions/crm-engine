@@ -60,6 +60,8 @@
   "UI": {
     "menu": "Meny",
     "openMenu": "Öppna meny",
-    "closeMenu": "Stäng meny"
+    "closeMenu": "Stäng meny",
+    "darkMode": "Mörkt Läge",
+    "lightMode": "Ljust Läge"
   }
 }

@@ -60,6 +60,8 @@
   "UI": {
     "menu": "Menu",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
   }
 }
