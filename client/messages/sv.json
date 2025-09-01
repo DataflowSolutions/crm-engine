@@ -108,7 +108,88 @@
     "menu": "Meny",
     "openMenu": "Öppna meny",
     "closeMenu": "Stäng meny",
-    "darkMode": "Mörkt Läge",
-    "lightMode": "Ljust Läge"
+    "changeLanguage": "Byt Språk",
+    "language": "Språk"
+  },
+  "PrivacyPolicy": {
+    "title": "Integritetspolicy",
+    "intro": "Din integritet är viktig för oss. Denna integritetspolicy förklarar hur vi samlar in, använder, avslöjar och skyddar din information när du använder vår CRM-plattform.",
+    "section1": {
+      "title": "1. Information Vi Samlar In",
+      "item1": "Personlig information du tillhandahåller, såsom namn, e-postadress och kontaktuppgifter.",
+      "item2": "Användningsdata, inklusive hur du interagerar med vår tjänst.",
+      "item3": "Cookies och liknande spårningsteknologier för att förbättra din upplevelse."
+    },
+    "section2": {
+      "title": "2. Hur Vi Använder Din Information",
+      "item1": "För att tillhandahålla, driva och underhålla våra CRM-tjänster.",
+      "item2": "För att förbättra och personalisera din upplevelse.",
+      "item3": "För att kommunicera med dig, inklusive support och uppdateringar.",
+      "item4": "För att följa juridiska skyldigheter."
+    },
+    "section3": {
+      "title": "3. Delning Av Din Information",
+      "content": "Vi säljer inte din personliga information. Vi kan dela dina data med betrodda tredje parter som hjälper oss att driva vår tjänst, föremål för sekretessavtal, eller enligt lag."
+    },
+    "section4": {
+      "title": "4. Datasäkerhet",
+      "content": "Vi implementerar rimliga säkerhetsåtgärder för att skydda din information. Dock är ingen metod för överföring över Internet eller elektronisk lagring 100% säker."
+    },
+    "section5": {
+      "title": "5. Dina Rättigheter",
+      "item1": "Du kan när som helst komma åt, uppdatera eller ta bort din personliga information.",
+      "item2": "Du kan välja bort marknadsföringskommunikation.",
+      "item3": "Kontakta oss för att utöva dina rättigheter eller för integritetsrelaterade frågor."
+    },
+    "section6": {
+      "title": "6. Ändringar Av Denna Policy",
+      "content": "Vi kan uppdatera denna integritetspolicy från tid till annan. Vi kommer att meddela dig om eventuella ändringar genom att publicera den nya policyn på denna sida."
+    },
+    "section7": {
+      "title": "7. Kontakta Oss",
+      "content": "Om du har några frågor om denna integritetspolicy, vänligen kontakta oss på",
+      "email": "support@yourcrm.com"
+    },
+    "footer": "Ditt CRM-företag. Alla rättigheter förbehållna."
+  },
+  "TermsOfService": {
+    "title": "Användarvillkor",
+    "intro": "Välkommen till vår CRM-plattform. Genom att komma åt eller använda våra tjänster godkänner du att vara bunden av dessa användarvillkor (\"Villkor\"). Vänligen läs dem noggrant.",
+    "section1": {
+      "title": "1. Acceptans Av Villkor",
+      "content": "Genom att använda vårt CRM bekräftar du att du har läst, förstått och godkänner dessa villkor. Om du inte godkänner, vänligen använd inte tjänsten."
+    },
+    "section2": {
+      "title": "2. Användning Av Tjänsten",
+      "item1": "Du måste vara minst 18 år gammal för att använda denna tjänst.",
+      "item2": "Du är ansvarig för att upprätthålla konfidentialiteten för dina kontoinloggningsuppgifter.",
+      "item3": "Du går med på att inte missbruka tjänsten eller hjälpa någon annan att göra det."
+    },
+    "section3": {
+      "title": "3. Användarinnehåll",
+      "content": "Du behåller äganderätten till dina data. Genom att använda vår tjänst ger du oss en licens att lagra, bearbeta och visa dina data som nödvändigt för att tillhandahålla tjänsten."
+    },
+    "section4": {
+      "title": "4. Integritet",
+      "content": "Vi respekterar din integritet. Vänligen granska vår integritetspolicy för att förstå hur vi samlar in, använder och skyddar din information."
+    },
+    "section5": {
+      "title": "5. Uppsägning",
+      "content": "Vi förbehåller oss rätten att avbryta eller säga upp din åtkomst till tjänsten efter vårt eget gottfinnande, utan förvarning, för beteende som vi tror bryter mot dessa villkor eller är skadligt för andra användare."
+    },
+    "section6": {
+      "title": "6. Ändringar Av Villkor",
+      "content": "Vi kan uppdatera dessa villkor från tid till annan. Fortsatt användning av tjänsten efter ändringar innebär att du accepterar de nya villkoren."
+    },
+    "section7": {
+      "title": "7. Ansvarsfriskrivning & Begränsning Av Ansvar",
+      "content": "Tjänsten tillhandahålls \"som den är\" utan garantier av något slag. Vi ansvarar inte för eventuella skador som uppstår från din användning av tjänsten."
+    },
+    "section8": {
+      "title": "8. Kontakt",
+      "content": "Om du har några frågor om dessa villkor, vänligen kontakta oss på",
+      "email": "support@yourcrm.com"
+    },
+    "footer": "Ditt CRM-företag. Alla rättigheter förbehållna."
   }
 }

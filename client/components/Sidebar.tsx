@@ -3,14 +3,18 @@ import Link from "next/link";
 import { navItems } from "../constants/navItems";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+<<<<<<< HEAD
 import DarkModeToggle from "./DarkModeToggle";
 import { Settings } from "lucide-react";
+=======
+import LanguageSwitcher from "./LanguageSwitcher";
+>>>>>>> 73deee38056640f34784bfa07c821bba66b35930
 
 export default function Sidebar() {
   const t = useTranslations();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full fixed py-4">
       <div className="flex flex-col gap-2">
         {(() => {
           // Import usePathname at the top: import { usePathname } from "next/navigation";
@@ -42,6 +46,7 @@ export default function Sidebar() {
         })()}
       </div>
 
+<<<<<<< HEAD
       {/* Dark Mode Toggle and Settings at the bottom */}
       <div className="mt-auto pt-4 border-t border-gray-200">
         <div className="flex items-center justify-between px-2">
@@ -54,6 +59,11 @@ export default function Sidebar() {
             <Settings size={18} />
           </Link>
         </div>
+=======
+      {/* Settings section at the bottom */}
+      <div className="mt-auto space-y-2 sidebar-settings ">
+        <LanguageSwitcher />
+>>>>>>> 73deee38056640f34784bfa07c821bba66b35930
       </div>
     </div>
   );

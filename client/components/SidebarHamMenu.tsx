@@ -5,7 +5,7 @@ import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import DarkModeToggle from "./DarkModeToggle";
+import LanguageSwitcherCompact from "./LanguageSwitcherCompact";
 
 export default function SidebarHamMenu() {
   const [open, setOpen] = useState(false);
@@ -85,9 +85,9 @@ export default function SidebarHamMenu() {
           })}
         </div>
 
-        {/* Dark Mode Toggle at the bottom */}
-        <div className="px-2 pb-4">
-          <DarkModeToggle />
+        {/* Language Switcher at the bottom */}
+        <div className="px-2 pb-4 space-y-3">
+          <LanguageSwitcherCompact />
         </div>
       </aside>
     </Fragment>
