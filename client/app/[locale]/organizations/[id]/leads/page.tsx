@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/utils/supabase/server";
 import LeadsClient from './LeadsClient';
+import { getUserPermissions } from "@/utils/permissions";
 
 type PageProps = { params: Promise<{ id: string; locale: string }> };
 
@@ -65,12 +66,16 @@ export default async function LeadsPage({ params }: PageProps) {
     .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 
+  // Get user permissions
+  const permissions = await getUserPermissions(orgId, auth.user.id);
+
   return (
     <LeadsClient 
       leads={(leads || []) as RawLead[]} 
       orgId={orgId} 
       orgName={org.name} 
-      locale={locale} 
+      locale={locale}
+      permissions={permissions}
     />
   );
 }

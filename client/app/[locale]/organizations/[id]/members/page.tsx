@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/app/utils/supabase/server';
+import { getUserPermissions } from '@/utils/permissions';
 import MembersClient from './client';
 import AccessDeniedPage from '../access-denied';
 
@@ -61,11 +62,15 @@ export default async function Page({ params }: PageProps) {
 
   if (memErr) throw memErr;
 
+  // Get user permissions
+  const userPermissions = await getUserPermissions(auth.user.id, orgId);
+
   return <MembersClient 
     org={org} 
     memberships={memberships ?? []} 
     locale={locale} 
     currentUserId={auth.user.id}
     isOrgCreator={org.owner_id === auth.user.id}
+    userPermissions={userPermissions}
   />;
 }

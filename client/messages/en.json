@@ -7,7 +7,27 @@
     "leads": "All Leads",
     "newLead": "Create Lead", 
     "templates": "Templates",
-    "members": "Members"
+    "members": "Members",
+    "backToOrganizations": "Back to Organizations",
+    "profile": "Profile"
+  },
+  "Buttons": {
+    "setupTemplate": "Setup Lead Template",
+    "createTemplate": "Create Template",
+    "createLead": "Create Lead",
+    "importLeads": "Import Leads",
+    "manageMembers": "Manage Members",
+    "importFromSpreadsheet": "Import from Spreadsheet",
+    "selectFile": "Select File",
+    "uploadFile": "Upload File",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "continue": "Continue",
+    "submit": "Submit"
   },
   "Auth": {
     "welcome": "Welcome Back 👋",
@@ -37,7 +57,53 @@
     "noOrgs": "No orgs yet. Create your first one 👉",
     "create": "Create",
     "openDashboard": "Open dashboard →",
+    "quickActions": {
+      "title": "Quick Actions",
+      "createLead": {
+        "title": "Create New Lead",
+        "description": "Add a new prospect to your pipeline"
+      },
+      "importLeads": {
+        "title": "Import Leads",
+        "description": "Bulk import from spreadsheet"
+      },
+      "manageTeam": {
+        "title": "Manage Team",
+        "description": "Invite and manage organization members"
+      }
+    },
     "leads": {
+      "title": "Leads",
+      "create": "Create Lead",
+      "import": "Import Leads",
+      "export": "Export Leads", 
+      "delete": "Delete",
+      "view": "View",
+      "edit": "Edit",
+      "search": "Search leads...",
+      "filterByStatus": "Filter by Status",
+      "filterByDate": "Filter by Date",
+      "allStatuses": "All Statuses",
+      "draft": "Draft",
+      "active": "Active", 
+      "closed": "Closed",
+      "archived": "Archived",
+      "allDates": "All Dates",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days", 
+      "last90Days": "Last 90 days",
+      "customRange": "Custom range",
+      "from": "From",
+      "to": "To",
+      "clearFilters": "Clear Filters",
+      "noLeadsFound": "No leads found",
+      "noLeadsFoundDescription": "No leads match your current search and filter criteria",
+      "createFirstLead": "Create your first lead",
+      "today": "Today",
+      "thisWeek": "This Week", 
+      "thisMonth": "This Month",
+      "showingResults": "Showing {count} of {total} leads",
+      "noPermission": "You don't have permission to perform this action",
       "cards": {
         "all": "All leads",
         "approved": "Approved leads",
@@ -46,16 +112,103 @@
       },
       "table": {
         "title": "Latest leads",
+        "recent": "Recent Leads",
+        "recentDescription": "Latest 5 leads from your organization",
         "showall": "Show all",
         "name": "Name",
         "created": "Created",
         "status": "Status",
-        "overflow": "more leads"
+        "overflow": "more leads",
+        "actions": "Actions"
       },
       "badges": {
+        "draft": "Draft",
         "approved": "Approved",
         "scheduled": "Scheduled",
         "closed": "Closed"
+      },
+      "importWizard": {
+        "title": "Import from Spreadsheet",
+        "subtitle": "Upload a CSV or Excel file containing your leads data",
+        "uploadStep": {
+          "title": "Upload Your Spreadsheet",
+          "subtitle": "Upload a CSV or Excel file containing your leads data",
+          "dragDrop": "Drag and drop your file here",
+          "dragDropActive": "Drop your file here",
+          "or": "or",
+          "chooseFile": "Choose File",
+          "processing": "Processing...",
+          "supportedFormats": "Supports CSV and Excel files (.csv, .xlsx, .xls)",
+          "sampleTemplate": "Sample Template",
+          "downloadSample": "Download sample template to see the expected format"
+        },
+        "mappingStep": {
+          "title": "Map Your Columns", 
+          "subtitle": "Match your spreadsheet columns to lead fields",
+          "templateName": "Template Name",
+          "templateNamePlaceholder": "Enter a name for your template",
+          "excludeColumn": "Exclude this column",
+          "mapTo": "Map to",
+          "customField": "Custom Field",
+          "customFieldName": "Custom field name",
+          "continueImport": "Continue Import",
+          "pleaseMapAtLeast": "Please map at least one column and enter a template name"
+        },
+        "completeStep": {
+          "title": "Import Complete!",
+          "subtitle": "Your leads have been successfully imported",
+          "leadsCreated": "leads created",
+          "leadsSkipped": "leads skipped",
+          "templateCreated": "Template created successfully",
+          "viewLeads": "View Leads",
+          "importMore": "Import More"
+        },
+        "errors": {
+          "fileFormat": "Please upload a CSV or Excel file",
+          "fileEmpty": "The file appears to be empty",
+          "processingError": "Error processing file",
+          "mappingRequired": "Please map at least one column and enter a template name"
+        }
+      }
+    },
+    "templates": {
+      "title": "Templates",
+      "create": "Create Template",
+      "import": "Import Template",
+      "edit": "Edit Template",
+      "delete": "Delete Template",
+      "universal": "Universal Templates",
+      "organization": "Your Organization Templates",
+      "noTemplates": "No templates yet",
+      "createFirst": "Create your first template",
+      "builder": {
+        "title": "Create Template",
+        "subtitle": "Design your lead template by adding fields",
+        "templateName": "Template Name",
+        "templateNamePlaceholder": "Enter template name",
+        "addField": "Add Field",
+        "fieldLabel": "Field Label",
+        "fieldKey": "Field Key",
+        "fieldType": "Field Type",
+        "required": "Required",
+        "fieldTypes": {
+          "text": "Text",
+          "email": "Email",
+          "phone": "Phone",
+          "number": "Number",
+          "date": "Date",
+          "select": "Select",
+          "multiselect": "Multi Select",
+          "url": "URL",
+          "textarea": "Text Area"
+        },
+        "defaultFields": {
+          "fullName": "Full Name",
+          "email": "Email"
+        },
+        "createTemplate": "Create Template",
+        "creating": "Creating...",
+        "success": "Template created successfully!"
       }
     },
     "members": {
@@ -64,11 +217,18 @@
       "inviteEmail": "Email Address",
       "inviteRole": "Role",
       "inviteSuccess": "Invite sent successfully",
+      "manage": "Manage Members",
       "roles": {
         "owner": "Owner",
         "admin": "Admin", 
         "member": "Member",
         "viewer": "Viewer"
+      },
+      "roleDescriptions": {
+        "owner": "Full access - Can manage everything including organization settings",
+        "admin": "Can manage members, templates, and all leads",
+        "member": "Can create and edit leads, view templates",
+        "viewer": "Can only view leads and templates"
       },
       "table": {
         "user": "User",
@@ -87,6 +247,13 @@
         "members": "Members",
         "invites": "Pending Invites"
       }
+    },
+    "permissions": {
+      "denied": "Access denied",
+      "insufficientRole": "Your role doesn't allow this action",
+      "viewerRestriction": "Viewers can only browse and view content",
+      "memberRestriction": "Members cannot manage templates or organization settings",
+      "adminRestriction": "Only owners can change organization settings"
     },
     "new": {
       "title": "Create organization",
@@ -197,5 +364,52 @@
       "email": "support@yourcrm.com"
     },
     "footer": "Your CRM Company. All rights reserved."
+  },
+  "settings": {
+    "title": "Organization Settings",
+    "subtitle": "Manage {orgName} settings and preferences",
+    "organizationDetails": "Organization Details",
+    "organizationName": "Organization Name",
+    "organizationNamePlaceholder": "Enter organization name",
+    "organizationDescription": "Description",
+    "organizationDescriptionPlaceholder": "Enter organization description",
+    "saveChanges": "Save Changes",
+    "updating": "Updating...",
+    "updateSuccess": "Organization updated successfully",
+    "updateError": "Failed to update organization",
+    "membersManagement": "Members Management",
+    "inviteMembers": "Invite Members",
+    "inviteMembersDescription": "Send invitations to new team members",
+    "sendInvite": "Send Invite",
+    "manageRoles": "Manage Roles",
+    "manageRolesDescription": "Configure permissions and roles for team members",
+    "managePermissions": "Manage Permissions",
+    "advanced": "Advanced Settings",
+    "dataExport": "Data Export",
+    "dataExportDescription": "Export your organization data",
+    "exportData": "Export Data",
+    "exporting": "Exporting...",
+    "exportSuccess": "Data exported successfully",
+    "exportError": "Failed to export data",
+    "dangerZone": "Danger Zone",
+    "deleteOrganization": "Delete Organization",
+    "deleteOrganizationWarning": "This action cannot be undone. All data will be permanently deleted.",
+    "deleteButton": "Delete"
+  },
+  "profile": {
+    "title": "Profile Settings",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "email": "Email Address",
+    "emailPlaceholder": "Enter your email",
+    "saveProfile": "Save Profile",
+    "updating": "Updating...",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Failed to update profile",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "updatePassword": "Update Password"
   }
 }

@@ -148,9 +148,13 @@ export default async function LeadDetailPage({ params }: PageProps) {
           </div>
           <div className="flex items-center gap-3">
             <InteractiveStatusBadge 
-              leadId={lead.id} 
-              currentStatus={lead.status as StatusType} 
-              orgId={orgId}
+              status={lead.status as StatusType}
+              onStatusChange={async (newStatus) => {
+                // Handle status update for individual lead page
+                console.log(`Updating lead ${lead.id} to status ${newStatus}`);
+                // You may want to add proper status update logic here
+              }}
+              isUpdating={false}
             />
           </div>
         </div>

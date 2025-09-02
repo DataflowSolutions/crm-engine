@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Upload, Download, CheckCircle, AlertCircle, FileSpreadsheet, X, Plus } from 'lucide-react';
+import { ArrowLeft, Upload, Download, CheckCircle, AlertCircle, FileSpreadsheet, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Props {

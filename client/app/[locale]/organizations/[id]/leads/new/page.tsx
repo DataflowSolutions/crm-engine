@@ -3,6 +3,7 @@ import { createClient } from "@/app/utils/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 import { createLead } from "./actions";
+import { getUserPermissions } from "@/utils/permissions";
 
 type PageProps = { 
   params: Promise<{ id: string; locale: string }>;
@@ -29,6 +30,12 @@ export default async function NewLeadPage({ params, searchParams }: PageProps) {
   const { data: auth } = await sb.auth.getUser();
   if (!auth?.user) {
     redirect(`/${locale}/login`);
+  }
+
+  // Check permissions
+  const permissions = await getUserPermissions(orgId, auth.user.id);
+  if (!permissions.canCreateLeads) {
+    redirect(`/${locale}/organizations/${orgId}/access-denied`);
   }
 
   // Get organization

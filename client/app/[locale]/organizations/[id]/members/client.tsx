@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { UserPlus, Users, Send, Copy, Trash2, RotateCcw } from 'lucide-react';
 import { inviteMember, updateMemberRole, removeMember, revokeInvite, resendInvite } from './actions';
+import { UserPermissions } from '@/utils/permissions';
 
 // Simple toast hook for this component
 function useSimpleToast() {
@@ -76,9 +78,10 @@ type Props = {
   locale: string;
   currentUserId: string;
   isOrgCreator: boolean;
+  userPermissions: UserPermissions;
 };
 
-export default function MembersClient({ org, memberships, locale, currentUserId, isOrgCreator }: Props) {
+export default function MembersClient({ org, memberships, locale, currentUserId, isOrgCreator, userPermissions }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -334,271 +337,355 @@ export default function MembersClient({ org, memberships, locale, currentUserId,
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Members - {org.name}</h1>
-        <button
-          onClick={() => setShowInviteModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-          disabled={isPending}
-        >
-          Invite Member
-        </button>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Team Members</h1>
+          <p className="text-gray-600 mt-1">{org.name}</p>
+        </div>
+        {userPermissions.canManageMembers && (
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isPending}
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            <span className="sm:inline">Invite Member</span>
+          </button>
+        )}
       </div>
 
-      {/* Members Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Members ({acceptedMembers.length})</h2>
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {acceptedMembers.map((member) => {
-                const userData = getUserData(member);
-                const isCurrentUser = member.user_id === currentUserId;
-                const isOwner = member.role === 'owner';
-                const cannotModifySelf = isCurrentUser && isOwner;
-                const canRemove = canRemoveMember(member);
-                const isFounder = member.user_id === org.owner_id;
-                
-                console.log('🔍 [Members] Member debug:', {
-                  memberId: member.id,
-                  status: member.status,
-                  userId: member.user_id,
-                  invitedEmail: member.invited_email,
-                  userData: userData,
-                  rawUsers: member.users,
-                  isCurrentUser,
-                  isOwner,
-                  cannotModifySelf,
-                  canRemove,
-                  currentUserRole,
-                  memberRole: member.role,
-                  isFounder,
-                  isOrgCreator
-                });
-                return (
-                <tr key={member.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {userData?.full_name || userData?.email || member.invited_email || 'Unknown User'}
-                        {isCurrentUser && <span className="ml-2 text-xs text-blue-600 font-medium">(You)</span>}
-                        {isFounder && <span className="ml-2 text-xs text-purple-600 font-medium">(Founder)</span>}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {userData?.email || member.invited_email || 'No email'}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {(() => {
-                      const canModifyRole = canModifyMemberRole(member);
-                      const availableRoles = getAvailableRoles(member);
-                      
-                      return (
-                        <select
-                          value={member.role}
-                          onChange={(e) => handleRoleChange(member.id, e.target.value as 'owner' | 'admin' | 'member' | 'viewer')}
-                          className={`text-sm border rounded px-2 py-1 ${!canModifyRole ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                          disabled={isPending || !canModifyRole}
-                          title={!canModifyRole ? "You don't have permission to change this role" : ""}
-                        >
-                          {availableRoles.map(role => (
-                            <option key={role} value={role}>
-                              {role.charAt(0).toUpperCase() + role.slice(1)}
-                            </option>
-                          ))}
-                        </select>
-                      );
-                    })()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {member.created_at ? new Date(member.created_at).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {!canRemove ? (
-                      <span className="text-gray-400">
-                        {isCurrentUser && isOwner 
-                          ? "Cannot remove yourself" 
-                          : currentUserRoleLevel > 2 
-                            ? "No permission" 
-                            : "Cannot remove"
-                        }
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleRemove(member.id)}
-                        className="text-red-600 hover:text-red-900"
-                        disabled={isPending}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </td>
+      {/* Active Members Section */}
+      <div className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <Users className="w-5 h-5 text-gray-500" />
+          <h2 className="text-xl font-semibold text-gray-900">
+            Active Members 
+            <span className="ml-2 text-sm font-normal text-gray-500">({acceptedMembers.length})</span>
+          </h2>
+        </div>
+        
+        <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="hidden sm:table-cell px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Joined
+                  </th>
+                  <th className="px-4 sm:px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {acceptedMembers.map((member) => {
+                  const userData = getUserData(member);
+                  const isCurrentUser = member.user_id === currentUserId;
+                  const isOwner = member.role === 'owner';
+                  const cannotModifySelf = isCurrentUser && isOwner;
+                  const canRemove = canRemoveMember(member);
+                  const isFounder = member.user_id === org.owner_id;
+                  
+                  console.log('🔍 [Members] Member debug:', {
+                    memberId: member.id,
+                    status: member.status,
+                    userId: member.user_id,
+                    invitedEmail: member.invited_email,
+                    userData: userData,
+                    rawUsers: member.users,
+                    isCurrentUser,
+                    isOwner,
+                    cannotModifySelf,
+                    canRemove,
+                    currentUserRole,
+                    memberRole: member.role,
+                    isFounder,
+                    isOrgCreator
+                  });
+                  return (
+                  <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-sm font-medium text-blue-600">
+                            {(userData?.full_name || userData?.email || member.invited_email || 'U').charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {userData?.full_name || userData?.email || member.invited_email || 'Unknown User'}
+                            {isCurrentUser && <span className="ml-2 text-xs text-blue-600 font-medium">(You)</span>}
+                            {isFounder && <span className="ml-2 text-xs text-purple-600 font-medium">(Founder)</span>}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {userData?.email || member.invited_email || 'No email'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                      {(() => {
+                        const canModifyRole = canModifyMemberRole(member);
+                        const availableRoles = getAvailableRoles(member);
+                        
+                        return (
+                          <select
+                            value={member.role}
+                            onChange={(e) => handleRoleChange(member.id, e.target.value as 'owner' | 'admin' | 'member' | 'viewer')}
+                            className={`text-sm border border-gray-300 rounded-lg px-3 py-1.5 transition-colors cursor-pointer ${
+                              !canModifyRole 
+                                ? 'bg-gray-100 cursor-not-allowed text-gray-500' 
+                                : 'bg-white hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                            }`}
+                            disabled={isPending || !canModifyRole}
+                            title={!canModifyRole ? "You don't have permission to change this role" : ""}
+                          >
+                            {availableRoles.map(role => (
+                              <option key={role} value={role}>
+                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                              </option>
+                            ))}
+                          </select>
+                        );
+                      })()}
+                    </td>
+                    <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {member.created_at ? new Date(member.created_at).toLocaleDateString(locale, {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                      }) : 'N/A'}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
+                      {!canRemove ? (
+                        <span className="text-gray-400 text-xs">
+                          {isCurrentUser && isOwner 
+                            ? "Cannot remove yourself" 
+                            : currentUserRoleLevel > 2 
+                              ? "No permission" 
+                              : "Cannot remove"
+                          }
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleRemove(member.id)}
+                          className="inline-flex items-center text-red-600 hover:text-red-700 transition-colors cursor-pointer"
+                          disabled={isPending}
+                        >
+                          <Trash2 className="w-4 h-4 mr-1" />
+                          <span className="hidden sm:inline">Remove</span>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* Pending Invites Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Pending Invites ({pendingInvites.length})</h2>
-        <div className="bg-white shadow rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Invited
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {pendingInvites.map((invite) => (
-                <tr key={invite.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {invite.invited_email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span className="capitalize">{invite.role}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                    <button
-                      onClick={() => handleResend(invite.id)}
-                      className="text-blue-600 hover:text-blue-900"
-                      disabled={isPending}
-                    >
-                      Resend
-                    </button>
-                    <button
-                      onClick={() => handleRevoke(invite.id)}
-                      className="text-red-600 hover:text-red-900"
-                      disabled={isPending}
-                    >
-                      Revoke
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="mb-12">
+        <div className="flex items-center gap-3 mb-6">
+          <Send className="w-5 h-5 text-gray-500" />
+          <h2 className="text-xl font-semibold text-gray-900">
+            Pending Invitations
+            <span className="ml-2 text-sm font-normal text-gray-500">({pendingInvites.length})</span>
+          </h2>
         </div>
+        
+        {pendingInvites.length === 0 ? (
+          <div className="bg-gray-50 rounded-xl p-8 text-center">
+            <Send className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">No pending invitations</p>
+          </div>
+        ) : (
+          <div className="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 sm:px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-4 sm:px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="hidden sm:table-cell px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Invited
+                    </th>
+                    <th className="px-4 sm:px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {pendingInvites.map((invite) => (
+                    <tr key={invite.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-sm font-medium text-gray-600">
+                              {(invite.invited_email || 'U').charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {invite.invited_email}
+                            </div>
+                            <div className="text-xs text-amber-600 font-medium">
+                              Pending
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                          {invite.role}
+                        </span>
+                      </td>
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {invite.invited_at ? new Date(invite.invited_at).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleResend(invite.id)}
+                            className="inline-flex items-center text-blue-600 hover:text-blue-700 transition-colors cursor-pointer text-sm"
+                            disabled={isPending}
+                          >
+                            <RotateCcw className="w-4 h-4 mr-1" />
+                            <span className="hidden sm:inline">Resend</span>
+                          </button>
+                          <button
+                            onClick={() => handleRevoke(invite.id)}
+                            className="inline-flex items-center text-red-600 hover:text-red-700 transition-colors cursor-pointer text-sm"
+                            disabled={isPending}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            <span className="hidden sm:inline">Revoke</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Invite Modal */}
       {showInviteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Invite New Member</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="user@example.com"
-                  disabled={isPending}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
-                </label>
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={isPending}
-                >
-                  <option value="admin">Admin - Can manage members and organization settings</option>
-                  <option value="member">Member - Can access and edit organization data</option>
-                  <option value="viewer">Viewer - Can only view organization data</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={() => {
-                  setShowInviteModal(false);
-                  setCopyableLink(null);
-                  setInviteEmail('');
-                }}
-                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleInvite}
-                disabled={!inviteEmail || isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {isPending ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Sending...
-                  </>
-                ) : (
-                  'Send Invite'
-                )}
-              </button>
-            </div>
-            
-            {copyableLink && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-                <p className="text-sm text-green-800 mb-2">Invite link created:</p>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={copyableLink}
-                    readOnly
-                    className="flex-1 text-xs bg-white border border-green-300 rounded-l-md px-2 py-1"
-                  />
-                  <button
-                    onClick={() => navigator.clipboard.writeText(copyableLink)}
-                    className="bg-green-600 text-white px-3 py-1 rounded-r-md text-xs hover:bg-green-700"
-                  >
-                    Copy
-                  </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <UserPlus className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Invite New Member</h3>
+                  <p className="text-sm text-gray-500">Add someone to your team</p>
                 </div>
               </div>
-            )}
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    placeholder="user@example.com"
+                    disabled={isPending}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors cursor-pointer"
+                    disabled={isPending}
+                  >
+                    <option value="admin">Admin - Can manage members and organization settings</option>
+                    <option value="member">Member - Can access and edit organization data</option>
+                    <option value="viewer">Viewer - Can only view organization data</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-8">
+                <button
+                  onClick={() => {
+                    setShowInviteModal(false);
+                    setCopyableLink(null);
+                    setInviteEmail('');
+                  }}
+                  className="px-4 py-2.5 text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleInvite}
+                  disabled={!inviteEmail || isPending}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors cursor-pointer"
+                >
+                  {isPending ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Invite
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              {copyableLink && (
+                <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <p className="text-sm text-green-800 mb-3 font-medium">Invite link created successfully!</p>
+                  <div className="flex rounded-lg overflow-hidden border border-green-300">
+                    <input
+                      type="text"
+                      value={copyableLink}
+                      readOnly
+                      className="flex-1 text-xs bg-white px-3 py-2 border-0 focus:ring-0"
+                    />
+                    <button
+                      onClick={() => navigator.clipboard.writeText(copyableLink)}
+                      className="bg-green-600 text-white px-4 py-2 text-xs hover:bg-green-700 transition-colors cursor-pointer flex items-center"
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

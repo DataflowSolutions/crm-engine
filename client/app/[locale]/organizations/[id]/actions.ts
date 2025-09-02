@@ -49,8 +49,9 @@ export async function updateLeadStatus(leadId: string, newStatus: string, orgId:
     throw new Error(`Failed to update lead status: ${error.message}`);
   }
 
-  // Revalidate the organization page
+  // Revalidate the organization and leads pages
   revalidatePath(`/organizations/${orgId}`);
+  revalidatePath(`/organizations/${orgId}/leads`);
   
   return { success: true };
 }

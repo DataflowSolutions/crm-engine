@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { deleteTemplate } from "./actions";
+import { UserPermissions } from "@/utils/permissions";
 
 type Template = {
   id: string;
@@ -17,12 +18,14 @@ type Template = {
 type TemplateCardProps = {
   template: Template;
   orgId: string;
+  permissions: UserPermissions;
 };
 
-export default function TemplateCard({ template, orgId }: TemplateCardProps) {
+export default function TemplateCard({ template, orgId, permissions }: TemplateCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const isUniversal = template.organization_id === '00000000-0000-0000-0000-000000000000';
-  const canDelete = !template.is_default && !isUniversal && template.organization_id === orgId;
+  const canDelete = !template.is_default && !isUniversal && template.organization_id === orgId && permissions.canDeleteTemplates;
+  const canEdit = !isUniversal && permissions.canEditTemplates;
 
   const handleDelete = async () => {
     if (isDeleting || !canDelete) return;
@@ -51,14 +54,16 @@ export default function TemplateCard({ template, orgId }: TemplateCardProps) {
           )}
         </div>
         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all duration-150">
-            <Edit className="w-4 h-4" />
-          </button>
+          {canEdit && (
+            <button className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all duration-150 cursor-pointer">
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
           {canDelete && (
             <button 
               onClick={handleDelete}
               disabled={isDeleting}
-              className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all duration-150 disabled:opacity-50"
+              className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-all duration-150 disabled:opacity-50 cursor-pointer"
               title={!canDelete ? "Cannot delete this template" : "Delete template"}
             >
               <Trash2 className="w-4 h-4" />

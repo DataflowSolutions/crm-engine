@@ -4,6 +4,8 @@ import { useState } from "react";
 import { FileText, Plus, ArrowUpDown, ArrowUp, ArrowDown, ArrowLeft, Users, Upload } from "lucide-react";
 import Link from "next/link";
 import TemplateCard from "./TemplateCard";
+import { UserPermissions } from "@/utils/permissions";
+import { useTranslations } from "next-intl";
 
 type Template = {
   id: string;
@@ -24,6 +26,7 @@ type TemplatesListProps = {
   orgId: string;
   locale: string;
   orgName: string;
+  permissions: UserPermissions;
 };
 
 export default function TemplatesList({ 
@@ -31,8 +34,10 @@ export default function TemplatesList({
   universalTemplates, 
   orgId, 
   locale, 
-  orgName 
+  orgName,
+  permissions
 }: TemplatesListProps) {
+  const t = useTranslations();
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -86,28 +91,32 @@ export default function TemplatesList({
             className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
+            {t("Nav.dashboard", {default: "Back to Dashboard"})}
           </Link>
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Lead Templates</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("Nav.templates", {default: "Lead Templates"})}</h1>
               <p className="text-gray-600">{orgName}</p>
             </div>
             <div className="flex gap-3">
-              <Link
-                href={`/${locale}/organizations/${orgId}/templates/import`}
-                className="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors shadow-sm"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Import from Spreadsheet
-              </Link>
-              <Link
-                href={`/${locale}/organizations/${orgId}/templates/new`}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Template
-              </Link>
+              {permissions.canImportLeads && (
+                <Link
+                  href={`/${locale}/organizations/${orgId}/templates/import`}
+                  className="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors shadow-sm cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {t("Buttons.importFromSpreadsheet")}
+                </Link>
+              )}
+              {permissions.canCreateTemplates && (
+                <Link
+                  href={`/${locale}/organizations/${orgId}/templates/new`}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t("Buttons.createTemplate")}
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -115,9 +124,9 @@ export default function TemplatesList({
         {/* Organization Templates */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Your Organization Templates</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t("Orgs.templates.organization", {default: "Your Organization Templates"})}</h2>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">{orgTemplates.length} template{orgTemplates.length !== 1 ? 's' : ''}</span>
+              <span className="text-sm text-gray-500">{orgTemplates.length} {orgTemplates.length === 1 ? t("Orgs.templates.templateCount", {default: "template"}) : t("Orgs.templates.templateCountPlural", {default: "templates"})}</span>
               
               {/* Sort Controls */}
               <div className="flex items-center space-x-2">
@@ -155,13 +164,15 @@ export default function TemplatesList({
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No custom templates yet</h3>
               <p className="text-gray-600 mb-4">Create your first template to define custom fields for your leads.</p>
-              <Link
-                href={`/${locale}/organizations/${orgId}/templates/new`}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Template
-              </Link>
+              {permissions.canCreateTemplates && (
+                <Link
+                  href={`/${locale}/organizations/${orgId}/templates/new`}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Template
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -169,7 +180,8 @@ export default function TemplatesList({
                 <TemplateCard 
                   key={template.id} 
                   template={template} 
-                  orgId={orgId} 
+                  orgId={orgId}
+                  permissions={permissions}
                 />
               ))}
             </div>

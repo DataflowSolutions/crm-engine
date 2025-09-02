@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/app/utils/supabase/server";
 import OrgDashboardClient from "./client";
 import AccessDeniedPage from "./access-denied";
+import { getUserPermissions } from "@/utils/permissions";
 
 type PageProps = { params: Promise<{ id: string; locale: string }> };
 
@@ -98,6 +99,9 @@ export default async function Page({ params }: PageProps) {
   })));
   console.log("- Has usable template:", hasTemplate);
 
+  // Get user permissions for this organization
+  const permissions = await getUserPermissions(orgId, auth.user.id);
+
   // 4) Fetch leads summary and recent leads for this organization
   const [
     { count: totalLeads }, 
@@ -161,6 +165,7 @@ export default async function Page({ params }: PageProps) {
       hasTemplate={!!hasTemplate}
       locale={locale}
       userName={userName}
+      permissions={permissions}
     />
   );
 }

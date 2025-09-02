@@ -1,13 +1,32 @@
-{
-  "Nav": {
+{  "Nav": {
     "home": "Hem",
-    "organizations": "Organisationer", 
-    "dashboard": "Instrumentpanel",
+    "organizations": "Organisationer",
+    "dashboard": "Dashboard",
     "settings": "Inställningar",
-    "leads": "Alla Leads",
+    "leads": "Alla leads",
     "newLead": "Skapa Lead",
     "templates": "Mallar",
-    "members": "Medlemmar"
+    "members": "Medlemmar",
+    "backToOrganizations": "Tillbaka till organisationer",
+    "profile": "Profil"
+  },
+  "Buttons": {
+    "setupTemplate": "Konfigurera Lead-mall",
+    "createTemplate": "Skapa Mall",
+    "createLead": "Skapa Lead", 
+    "importLeads": "Importera Leads",
+    "manageMembers": "Hantera Medlemmar",
+    "importFromSpreadsheet": "Importera från Kalkylblad",
+    "selectFile": "Välj Fil",
+    "uploadFile": "Ladda upp Fil",
+    "cancel": "Avbryt",
+    "save": "Spara",
+    "delete": "Ta bort",
+    "edit": "Redigera",
+    "view": "Visa", 
+    "back": "Tillbaka",
+    "continue": "Fortsätt",
+    "submit": "Skicka"
   },
   "Auth": {
     "welcome": "Välkommen tillbaka 👋",
@@ -37,7 +56,57 @@
     "noOrgs": "Inga organisationer ännu. Skapa din första 👉",
     "create": "Skapa",
     "openDashboard": "Öppna instrumentpanel →",
+    "quickActions": {
+      "title": "Snabbåtgärder",
+      "createLead": {
+        "title": "Skapa Ny Lead",
+        "description": "Lägg till en ny prospekt till din pipeline"
+      },
+      "importLeads": {
+        "title": "Importera Leads",
+        "description": "Bulkimport från kalkylblad"
+      },
+      "manageTeam": {
+        "title": "Hantera Team",
+        "description": "Bjud in och hantera organisationsmedlemmar"
+      }
+    },
     "leads": {
+      "title": "Leads",
+      "create": "Skapa Lead",
+      "import": "Importera Leads",
+      "export": "Exportera Leads",
+      "delete": "Ta bort",
+      "view": "Visa",
+      "edit": "Redigera",
+      "search": "Sök leads...",
+      "filterByStatus": "Filtrera efter Status",
+      "filterByDate": "Filtrera efter Datum",
+      "allStatuses": "Alla Statusar",
+      "draft": "Utkast",
+      "active": "Aktiv",
+      "closed": "Stängd",
+      "archived": "Arkiverad",
+      "allDates": "Alla Datum",
+      "last7Days": "Senaste 7 dagarna",
+      "last30Days": "Senaste 30 dagarna",
+      "last90Days": "Senaste 90 dagarna",
+      "customRange": "Anpassat intervall",
+      "from": "Från",
+      "to": "Till",
+      "clearFilters": "Rensa Filter",
+      "noLeadsFound": "Inga leads hittades",
+      "noLeadsFoundDescription": "Inga leads matchar dina nuvarande sök- och filterkriterier",
+      "createFirstLead": "Skapa din första lead",
+      "today": "Idag",
+      "thisWeek": "Denna vecka",
+      "thisMonth": "Denna månad",
+      "showingResults": "Visar {count} av {total} leads",
+      "noPermission": "Du har inte behörighet att utföra denna åtgärd",
+      "selectAll": "Välj alla",
+      "deselectAll": "Avmarkera alla",
+      "noLeads": "Inga leads ännu",
+      "noLeadsDescription": "Skapa din första lead för att börja hantera dina prospekts, eller importera leads från ett kalkylblad.",
       "cards": {
         "all": "Alla leads",
         "approved": "Godkända leads",
@@ -46,16 +115,103 @@
       },
       "table": {
         "title": "Senaste leadsen",
+        "recent": "Senaste Leads",
+        "recentDescription": "Senaste 5 leads från din organisation",
         "showall": "Visa alla",
         "name": "Namn",
         "created": "Skapad",
         "status": "Status",
-        "overflow": "fler leads"
+        "overflow": "fler leads",
+        "actions": "Åtgärder"
       },
       "badges": {
+        "draft": "Utkast",
         "approved": "Godkänd",
         "scheduled": "Schemalagd",
         "closed": "Stängd"
+      },
+      "importWizard": {
+        "title": "Importera från Kalkylblad",
+        "subtitle": "Ladda upp en CSV- eller Excel-fil med dina leads-data",
+        "uploadStep": {
+          "title": "Ladda upp ditt Kalkylblad",
+          "subtitle": "Ladda upp en CSV- eller Excel-fil med dina leads-data",
+          "dragDrop": "Dra och släpp din fil här",
+          "dragDropActive": "Släpp din fil här",
+          "or": "eller",
+          "chooseFile": "Välj Fil",
+          "processing": "Bearbetar...",
+          "supportedFormats": "Stöder CSV- och Excel-filer (.csv, .xlsx, .xls)",
+          "sampleTemplate": "Exempelmall",
+          "downloadSample": "Ladda ner exempelmall för att se det förväntade formatet"
+        },
+        "mappingStep": {
+          "title": "Mappa dina Kolumner",
+          "subtitle": "Matcha dina kalkylbladskolumner med lead-fält",
+          "templateName": "Mallnamn",
+          "templateNamePlaceholder": "Ange ett namn för din mall",
+          "excludeColumn": "Exkludera denna kolumn",
+          "mapTo": "Mappa till",
+          "customField": "Anpassat Fält",
+          "customFieldName": "Anpassat fältnamn",
+          "continueImport": "Fortsätt Import",
+          "pleaseMapAtLeast": "Vänligen mappa minst en kolumn och ange ett mallnamn"
+        },
+        "completeStep": {
+          "title": "Import Klar!",
+          "subtitle": "Dina leads har importerats framgångsrikt",
+          "leadsCreated": "leads skapade",
+          "leadsSkipped": "leads överhoppade",
+          "templateCreated": "Mall skapad framgångsrikt",
+          "viewLeads": "Visa Leads",
+          "importMore": "Importera Mer"
+        },
+        "errors": {
+          "fileFormat": "Vänligen ladda upp en CSV- eller Excel-fil",
+          "fileEmpty": "Filen verkar vara tom",
+          "processingError": "Fel vid bearbetning av fil",
+          "mappingRequired": "Vänligen mappa minst en kolumn och ange ett mallnamn"
+        }
+      }
+    },
+    "templates": {
+      "title": "Mallar",
+      "create": "Skapa Mall",
+      "import": "Importera Mall",
+      "edit": "Redigera Mall",
+      "delete": "Ta bort Mall",
+      "universal": "Universella Mallar",
+      "organization": "Dina Organisationsmallar",
+      "noTemplates": "Inga mallar ännu",
+      "createFirst": "Skapa din första mall",
+      "builder": {
+        "title": "Skapa Mall",
+        "subtitle": "Designa din lead-mall genom att lägga till fält",
+        "templateName": "Mallnamn",
+        "templateNamePlaceholder": "Ange mallnamn",
+        "addField": "Lägg till Fält",
+        "fieldLabel": "Fältetikett",
+        "fieldKey": "Fältnyckel",
+        "fieldType": "Fälttyp",
+        "required": "Obligatorisk",
+        "fieldTypes": {
+          "text": "Text",
+          "email": "E-post",
+          "phone": "Telefon",
+          "number": "Nummer",
+          "date": "Datum",
+          "select": "Välj",
+          "multiselect": "Flervärdesval",
+          "url": "URL",
+          "textarea": "Textområde"
+        },
+        "defaultFields": {
+          "fullName": "Fullständigt Namn",
+          "email": "E-post"
+        },
+        "createTemplate": "Skapa Mall",
+        "creating": "Skapar...",
+        "success": "Mall skapad framgångsrikt!"
       }
     },
     "members": {
@@ -64,11 +220,18 @@
       "inviteEmail": "E-postadress",
       "inviteRole": "Roll",
       "inviteSuccess": "Inbjudan skickad",
+      "manage": "Hantera Medlemmar",
       "roles": {
         "owner": "Ägare",
         "admin": "Admin",
         "member": "Medlem", 
         "viewer": "Läsare"
+      },
+      "roleDescriptions": {
+        "owner": "Full åtkomst - Kan hantera allt inklusive organisationsinställningar",
+        "admin": "Kan hantera medlemmar, mallar och alla leads",
+        "member": "Kan skapa och redigera leads, visa mallar",
+        "viewer": "Kan endast visa leads och mallar"
       },
       "table": {
         "user": "Användare",
@@ -87,6 +250,13 @@
         "members": "Medlemmar",
         "invites": "Väntande inbjudningar"
       }
+    },
+    "permissions": {
+      "denied": "Åtkomst nekad",
+      "insufficientRole": "Din roll tillåter inte denna åtgärd",
+      "viewerRestriction": "Läsare kan endast bläddra och visa innehåll",
+      "memberRestriction": "Medlemmar kan inte hantera mallar eller organisationsinställningar", 
+      "adminRestriction": "Endast ägare kan ändra organisationsinställningar"
     },
     "new": {
       "title": "Skapa organisation",
@@ -116,6 +286,37 @@
     "closeMenu": "Stäng meny",
     "changeLanguage": "Byt Språk",
     "language": "Språk"
+  },
+  "templateBuilder": {
+    "title": "Mall-byggare",
+    "subtitle": "Designa din lead-mall genom att lägga till fält",
+    "preview": "Förhandsvisning",
+    "fields": "Fält",
+    "settings": "Inställningar",
+    "addField": "Lägg till fält",
+    "fieldSettings": "Fältinställningar",
+    "fieldLabel": "Fältetikett",
+    "fieldKey": "Fältnyckel",
+    "fieldType": "Fälttyp",
+    "required": "Obligatorisk",
+    "fieldTypes": {
+      "text": "Text",
+      "email": "E-post",
+      "phone": "Telefon",
+      "number": "Nummer",
+      "date": "Datum",
+      "select": "Välj",
+      "multiselect": "Flervärdesval",
+      "url": "URL",
+      "textarea": "Textområde"
+    },
+    "defaultFields": {
+      "fullName": "Fullständigt Namn",
+      "email": "E-post"
+    },
+    "createTemplate": "Skapa Mall",
+    "creating": "Skapar...",
+    "success": "Mall skapad framgångsrikt!"
   },
   "PrivacyPolicy": {
     "title": "Integritetspolicy",
@@ -197,5 +398,52 @@
       "email": "support@yourcrm.com"
     },
     "footer": "Ditt CRM-företag. Alla rättigheter förbehållna."
+  },
+  "settings": {
+    "title": "Organisationsinställningar",
+    "subtitle": "Hantera {orgName} inställningar och preferenser",
+    "organizationDetails": "Organisationsdetaljer",
+    "organizationName": "Organisationsnamn",
+    "organizationNamePlaceholder": "Ange organisationsnamn",
+    "organizationDescription": "Beskrivning",
+    "organizationDescriptionPlaceholder": "Ange organisationsbeskrivning",
+    "saveChanges": "Spara ändringar",
+    "updating": "Uppdaterar...",
+    "updateSuccess": "Organisationen uppdaterades framgångsrikt",
+    "updateError": "Kunde inte uppdatera organisationen",
+    "membersManagement": "Medlemshantering",
+    "inviteMembers": "Bjud in medlemmar",
+    "inviteMembersDescription": "Skicka inbjudningar till nya teammedlemmar",
+    "sendInvite": "Skicka inbjudan",
+    "manageRoles": "Hantera roller",
+    "manageRolesDescription": "Konfigurera behörigheter och roller för teammedlemmar",
+    "managePermissions": "Hantera behörigheter",
+    "advanced": "Avancerade inställningar",
+    "dataExport": "Dataexport",
+    "dataExportDescription": "Exportera din organisationsdata",
+    "exportData": "Exportera data",
+    "exporting": "Exporterar...",
+    "exportSuccess": "Data exporterades framgångsrikt",
+    "exportError": "Kunde inte exportera data",
+    "dangerZone": "Farlig zon",
+    "deleteOrganization": "Ta bort organisation",
+    "deleteOrganizationWarning": "Denna åtgärd kan inte ångras. All data kommer att raderas permanent.",
+    "deleteButton": "Radera"
+  },
+  "profile": {
+    "title": "Profilinställningar",
+    "displayName": "Visningsnamn",
+    "displayNamePlaceholder": "Ange ditt visningsnamn",
+    "email": "E-postadress",
+    "emailPlaceholder": "Ange din e-post",
+    "saveProfile": "Spara profil",
+    "updating": "Uppdaterar...",
+    "updateSuccess": "Profilen uppdaterades framgångsrikt",
+    "updateError": "Kunde inte uppdatera profilen",
+    "changePassword": "Ändra lösenord",
+    "currentPassword": "Nuvarande lösenord",
+    "newPassword": "Nytt lösenord",
+    "confirmPassword": "Bekräfta lösenord",
+    "updatePassword": "Uppdatera lösenord"
   }
 }

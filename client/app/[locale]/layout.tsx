@@ -22,14 +22,21 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
         <NextIntlClientProvider messages={messages}>
-          <div className="flex">
-            <div>
+          <div className="flex min-h-screen">
+            {/* Mobile hamburger menu */}
+            <div className="md:hidden">
               <SidebarHamMenu />
             </div>
-            <aside className="hidden md:flex flex-col gap-2 w-56 bg-white border-r border-black/10 px-4 min-h-screen">
+            
+            {/* Desktop sidebar */}
+            <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 z-40">
               <Sidebar />
             </aside>
-            <div className="flex-1">{children}</div>
+            
+            {/* Main content with proper margin for sidebar */}
+            <div className="flex-1 md:ml-56">
+              {children}
+            </div>
           </div>
         </NextIntlClientProvider>
       </body>

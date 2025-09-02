@@ -1,6 +1,7 @@
 import { createClient } from "@/app/utils/supabase/server";
 import { redirect } from "next/navigation";
 import TemplatesList from "./TemplatesList";
+import { getUserPermissions } from "@/utils/permissions";
 
 type PageProps = { params: Promise<{ id: string; locale: string }> };
 
@@ -45,6 +46,9 @@ export default async function TemplatesPage({ params }: PageProps) {
   const universalTemplates = templates?.filter(t => t.organization_id === '00000000-0000-0000-0000-000000000000') || [];
   const orgTemplates = templates?.filter(t => t.organization_id === orgId) || [];
 
+  // Get user permissions
+  const permissions = await getUserPermissions(orgId, auth.user.id);
+
   return (
     <TemplatesList
       orgTemplates={orgTemplates}
@@ -52,6 +56,7 @@ export default async function TemplatesPage({ params }: PageProps) {
       orgId={orgId}
       locale={locale}
       orgName={org.name}
+      permissions={permissions}
     />
   );
 }
