@@ -1,11 +1,30 @@
 "use client";
 import Link from "next/link";
-import { navItems } from "../constants/navItems";
 import { Fragment, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Building2, Users, FileText, Plus, Settings, Layers, User, Home, LayoutDashboard } from "lucide-react";
 import { useTranslations } from "next-intl";
 import LanguageSwitcherCompact from "./LanguageSwitcherCompact";
+
+// Icon mapping for string-based icon names
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Building2,
+  Users,
+  FileText,
+  Plus,
+  Settings,
+  Layers,
+  User,
+  Home,
+  LayoutDashboard,
+};
+
+// Server-compatible navigation items
+const generalNavItems = [
+  { iconName: "Home", labelKey: "Nav.home", href: "/" },
+  { iconName: "Building2", labelKey: "Nav.organizations", href: "/organizations" },
+  { iconName: "Settings", labelKey: "Nav.settings", href: "/settings" },
+];
 
 export default function SidebarHamMenu() {
   const [open, setOpen] = useState(false);
@@ -28,7 +47,7 @@ export default function SidebarHamMenu() {
       {/* Hamburger button - visible only on mobile */}
       {!open && (
         <button
-          className="md:hidden fixed top-4 right-4 z-50 p-2 rounded-full bg-blue-500 shadow-md"
+          className="md:hidden fixed top-4 right-4 z-50 p-2 rounded-full bg-blue-500 shadow-md cursor-pointer hover:bg-blue-600 transition-colors duration-200"
           aria-label={t("UI.openMenu")}
           onClick={() => setOpen((prev) => !prev)}
         >
@@ -56,14 +75,19 @@ export default function SidebarHamMenu() {
           <button
             aria-label={t("UI.closeMenu")}
             onClick={() => setOpen(false)}
-            className="p-2 rounded hover:bg-gray-100"
+            className="p-2 rounded hover:bg-gray-100 cursor-pointer transition-colors duration-200"
           >
             <X size={20} className="text-gray-700" />
           </button>
         </div>
         <div className="flex flex-col gap-1 mt-2 flex-1">
-          {navItems.map((item) => {
+          {generalNavItems.map((item) => {
             const isActive = pathname === item.href;
+            const IconComponent = iconMap[item.iconName];
+            
+            // Skip item if no icon found
+            if (!IconComponent) return null;
+            
             return (
               <Link
                 href={item.href}
@@ -75,9 +99,8 @@ export default function SidebarHamMenu() {
                 }`}
                 onClick={() => setOpen(false)}
               >
-                <item.icon
-                  size={20}
-                  className={isActive ? "text-white" : "text-blue-500"}
+                <IconComponent
+                  className={`w-5 h-5 ${isActive ? "text-white" : "text-blue-500"}`}
                 />
                 <span>{t(item.labelKey)}</span>
               </Link>

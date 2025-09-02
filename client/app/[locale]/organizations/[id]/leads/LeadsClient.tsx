@@ -224,9 +224,19 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                 disabled={isDeleting}
                 className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 disabled:opacity-50 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">{isDeleting ? t('delete') + '...' : `${t('delete')} ${selectedLeads.size}`}</span>
-                <span className="sm:hidden">{isDeleting ? t('delete') + '...' : `${t('delete')} (${selectedLeads.size})`}</span>
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span className="hidden sm:inline">{t('delete')}...</span>
+                    <span className="sm:hidden">{t('delete')}...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">{`${t('delete')} ${selectedLeads.size}`}</span>
+                    <span className="sm:hidden">{`${t('delete')} (${selectedLeads.size})`}</span>
+                  </>
+                )}
               </button>
             )}
             {permissions.canImportLeads && (
@@ -282,7 +292,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                       setSearchTerm('');
                       setCurrentPage(1);
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer p-1 rounded-full hover:bg-gray-100 transition-all duration-200"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -343,7 +353,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                     setDateFilter('all');
                     setCurrentPage(1);
                   }}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
                 >
                   <X className="w-3 h-3" />
                   {t('clearFilters', { default: 'Clear Filters' })}
@@ -557,7 +567,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer"
                   >
                     Previous
                   </button>
@@ -566,7 +576,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                        className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer ${
                           currentPage === page
                             ? 'bg-blue-600 text-white'
                             : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
@@ -579,7 +589,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    className="px-3 py-1 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 cursor-pointer"
                   >
                     Next
                   </button>

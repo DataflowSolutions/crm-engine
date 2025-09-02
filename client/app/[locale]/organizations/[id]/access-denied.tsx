@@ -64,7 +64,7 @@ export default function AccessDeniedPage({ locale, orgId, orgExists, userEmail }
           {orgExists && (
             <button
               onClick={handleCopyRequest}
-              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+              className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors cursor-pointer"
             >
               {copied ? '✓ Request Copied!' : 'Copy Access Request'}
             </button>

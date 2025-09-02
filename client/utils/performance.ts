@@ -190,7 +190,7 @@ export const DataCache = {
 };
 
 // Prefetch function for hover states
-export const prefetchLeadData = async (leadId: string, _orgId?: string) => {
+export const prefetchLeadData = async (leadId: string) => {
   const cacheKey = DataCache.keys.leadDetail(leadId);
   if (DataCache.get(cacheKey)) return; // Already cached
   

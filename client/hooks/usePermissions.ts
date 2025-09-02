@@ -4,7 +4,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { SessionCache } from '../utils/performance';
 import type { UserPermissions } from '../utils/permissions';
 
-// Client-side hook for getting cached permissions
+/**
+ * PERFORMANCE NOTE: This client-side hook should be used sparingly!
+ * 
+ * For better performance, prefer server-side permission fetching:
+ * - In page components: const permissions = await getUserPermissions(orgId, userId)
+ * - Pass permissions as props to client components
+ * 
+ * Only use this hook when:
+ * - You need reactive permission updates in client components
+ * - Server-side fetching is not possible
+ * - Component needs to respond to permission changes
+ */
+
+// Client-side hook for getting cached permissions (USE SPARINGLY)
 export function usePermissions(orgId: string): {
   permissions: UserPermissions | null;
   isLoading: boolean;

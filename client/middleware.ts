@@ -78,8 +78,17 @@ export async function middleware(request: NextRequest) {
     return authResponse;
   }
   
-  // Otherwise, apply internationalization
-  return intlMiddleware(request);
+  // Apply internationalization and add pathname to headers for server components
+  const response = intlMiddleware(request);
+  if (response) {
+    response.headers.set('x-pathname', pathname);
+    return response;
+  }
+  
+  // Fallback response with pathname header
+  const newResponse = new Response(null, { status: 200 });
+  newResponse.headers.set('x-pathname', pathname);
+  return newResponse;
 }
 
 export const config = {

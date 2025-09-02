@@ -73,7 +73,19 @@ export default async function LeadDetailPage({ params }: PageProps) {
       created_at: leadDetail.created_at,
       updated_at: leadDetail.updated_at,
       status: leadDetail.status,
-      lead_field_values: [] // Will be populated from field_values
+      lead_field_values: Object.entries(leadDetail.field_values || {}).map(([fieldId, value]) => {
+        const templateField = leadDetail.template_fields.find(f => f.id === fieldId);
+        return {
+          value: value,
+          lead_fields: templateField ? [{
+            id: templateField.id,
+            label: templateField.label,
+            field_type: templateField.field_type,
+            is_required: templateField.is_required,
+            sort_order: templateField.sort_order
+          }] : []
+        };
+      }).filter(fv => fv.lead_fields.length > 0)
     };
 
     const transformedTemplate = {

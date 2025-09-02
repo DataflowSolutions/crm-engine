@@ -133,7 +133,7 @@ export default function TemplatesList({
                 <span className="text-sm text-gray-500">Sort by:</span>
                 <button
                   onClick={() => handleSort('name')}
-                  className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors ${
+                  className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
                     sortField === 'name' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -141,7 +141,7 @@ export default function TemplatesList({
                 </button>
                 <button
                   onClick={() => handleSort('created_at')}
-                  className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors ${
+                  className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
                     sortField === 'created_at' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -149,7 +149,7 @@ export default function TemplatesList({
                 </button>
                 <button
                   onClick={() => handleSort('field_count')}
-                  className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors ${
+                  className={`inline-flex items-center px-2 py-1 text-xs rounded transition-colors cursor-pointer ${
                     sortField === 'field_count' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >

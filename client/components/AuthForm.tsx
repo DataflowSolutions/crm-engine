@@ -77,14 +77,14 @@ export default function AuthForm({ login, signup }: AuthFormProps) {
       <div className="flex flex-col gap-3">
         <button
           formAction={login}
-          className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white font-semibold shadow-sm transition hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white font-semibold shadow-sm transition hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
         >
           {t("Auth.login.cta")}
         </button>
         <button
           formAction={signup}
           onClick={handleSignupClick}
-          className="w-full rounded-md bg-gray-100 px-4 py-2 font-semibold text-gray-800 shadow-sm transition hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+          className="w-full rounded-md bg-gray-100 px-4 py-2 font-semibold text-gray-800 shadow-sm transition hover:bg-gray-200 focus:ring-2 focus:ring-gray-400 focus:outline-none cursor-pointer"
         >
           {t("Auth.signup.cta")}
         </button>

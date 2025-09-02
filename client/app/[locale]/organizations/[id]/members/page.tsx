@@ -56,9 +56,9 @@ export default async function Page({ params }: PageProps) {
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false });
 
-  console.log('🔍 [Members Page] Debug info:');
-  console.log('- Memberships error:', memErr);
-  console.log('- Memberships data:', JSON.stringify(memberships, null, 2));
+  // console.log('🔍 [Members Page] Debug info:');
+  // console.log('- Memberships error:', memErr);
+  // console.log('- Memberships data:', JSON.stringify(memberships, null, 2));
 
   if (memErr) throw memErr;
 

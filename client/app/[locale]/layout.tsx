@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "../globals.css";
-import Sidebar from "@/components/Sidebar";
+import OptimizedSidebar from "@/components/OptimizedSidebar";
 import SidebarHamMenu from "@/components/SidebarHamMenu";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
@@ -32,7 +32,7 @@ export default async function RootLayout({
             
             {/* Desktop sidebar */}
             <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 z-40">
-              <Sidebar />
+              <OptimizedSidebar />
             </aside>
             
             {/* Main content with proper margin for sidebar */}

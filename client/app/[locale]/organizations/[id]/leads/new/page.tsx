@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/app/utils/supabase/server";
+import { getUserPermissions } from "@/utils/permissions";
 import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 import { createLead } from "./actions";
@@ -53,8 +54,25 @@ export default async function NewLeadPage({ params, searchParams }: PageProps) {
     redirect(`/${locale}/login`);
   }
 
+  // Get user permissions using our optimized function
+  let permissions;
   try {
-    // Use optimized database function to get all data in one query
+    permissions = await getUserPermissions(orgId, auth.user.id);
+  } catch (error) {
+    console.error('Error fetching permissions:', error);
+    redirect(`/${locale}/organizations`);
+  }
+
+  // Check if user can create leads using our TypeScript permissions
+  if (!permissions.canCreateLeads) {
+    console.log('🚫 [New Lead Page] Access denied - TypeScript permissions say no canCreateLeads');
+    redirect(`/${locale}/organizations/${orgId}/access-denied`);
+  }
+
+  //console.log('✅ [New Lead Page] Access granted - canCreateLeads:', permissions.canCreateLeads);
+
+  try {
+    // Use optimized database function to get templates and org data (but ignore its permission check)
     const { data: pageData, error } = await sb
       .rpc('get_new_lead_page_data', {
         p_org_id: orgId,
@@ -68,13 +86,23 @@ export default async function NewLeadPage({ params, searchParams }: PageProps) {
       redirect(`/${locale}/organizations`);
     }
 
+    // Debug: Let's see what permissions we're getting
+    // console.log('🔍 [New Lead Page] Database function permissions (IGNORED):', {
+    //   dbCanCreateLeads: pageData?.user_permissions?.can_create_leads,
+    //   tsCanCreateLeads: permissions.canCreateLeads,
+    //   role: pageData?.user_permissions?.role,
+    //   isOrgCreator: pageData?.user_permissions?.is_org_creator
+    // });
+
     if (!pageData || !pageData.has_access) {
+      console.log('🚫 [New Lead Page] Access denied - no page data or access');
       redirect(`/${locale}/organizations/${orgId}/access-denied`);
     }
 
-    if (!pageData.user_permissions.can_create_leads) {
-      redirect(`/${locale}/organizations/${orgId}/access-denied`);
-    }
+    // REMOVED: Database function permission check - using TypeScript permissions instead
+    // if (!pageData.user_permissions.can_create_leads) {
+    //   redirect(`/${locale}/organizations/${orgId}/access-denied`);
+    // }
 
     if (!pageData.selected_template || !pageData.selected_template.id) {
       return (
@@ -236,7 +264,7 @@ export default async function NewLeadPage({ params, searchParams }: PageProps) {
               <div className="mt-8 flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
                 >
                   Create Lead
                 </button>
