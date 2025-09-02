@@ -47,7 +47,7 @@ export function getLeadDisplayName(lead: RawLead | Lead): string {
   }
 
   // Try to find common name fields in order of preference
-  const nameFields = ['name', 'full_name', 'first_name', 'company', 'email', 'title'];
+  const nameFields = ['name', 'full_name', 'first_name', 'company', 'title', 'email'];
   
   for (const fieldKey of nameFields) {
     const field = lead.lead_field_values.find((fv: RawLeadFieldValue | LeadFieldValue) => {
@@ -62,10 +62,48 @@ export function getLeadDisplayName(lead: RawLead | Lead): string {
     }
   }
 
-  // If no name-like field found, use the first non-empty field value
-  const firstField = lead.lead_field_values.find((fv: RawLeadFieldValue | LeadFieldValue) => fv.value && fv.value.trim());
-  if (firstField) {
-    return firstField.value.trim();
+  // Filter out values that look like URLs, long text, or are not suitable for display names
+  const suitableFields = lead.lead_field_values.filter((fv: RawLeadFieldValue | LeadFieldValue) => {
+    if (!fv.value || !fv.value.trim()) return false;
+    
+    const value = fv.value.trim();
+    
+    // Skip URLs
+    if (value.startsWith('http') || value.includes('://')) return false;
+    
+    // Skip very long values (probably descriptions or content)
+    if (value.length > 50) return false;
+    
+    // Skip values that look like file paths
+    if (value.includes('/') && value.includes('.')) return false;
+    
+    // Skip values that are just numbers (probably IDs)
+    if (/^\d+$/.test(value)) return false;
+    
+    return true;
+  });
+
+  // Use the first suitable field
+  if (suitableFields.length > 0) {
+    return suitableFields[0].value.trim();
+  }
+
+  // If still no suitable field, try to extract something meaningful from URLs
+  const urlField = lead.lead_field_values.find((fv: RawLeadFieldValue | LeadFieldValue) => {
+    const value = fv.value?.trim() || '';
+    return value.startsWith('http') || value.includes('://');
+  });
+
+  if (urlField) {
+    try {
+      const url = new URL(urlField.value);
+      // Try to extract a meaningful name from the domain
+      const domain = url.hostname.replace('www.', '');
+      return domain.split('.')[0] || domain;
+    } catch {
+      // If URL parsing fails, use a truncated version
+      return urlField.value.length > 30 ? `${urlField.value.substring(0, 30)}...` : urlField.value;
+    }
   }
 
   // Fallback to ID

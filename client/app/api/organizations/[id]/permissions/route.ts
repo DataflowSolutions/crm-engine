@@ -19,7 +19,12 @@ export async function GET(
     // Get user permissions
     const permissions = await getUserPermissions(orgId, auth.user.id);
 
-    return NextResponse.json(permissions);
+    // Cache for 5 minutes
+    return NextResponse.json(permissions, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60'
+      }
+    });
   } catch (error) {
     console.error("Error fetching permissions:", error);
     return NextResponse.json(

@@ -23,6 +23,7 @@ type TemplateBuilderProps = {
 
 export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBuilderProps) {
   const [templateName, setTemplateName] = useState(isDefault ? "Default Lead Template" : "");
+  const [displayFieldId, setDisplayFieldId] = useState<string>("");
   const [fields, setFields] = useState<Field[]>([
     {
       id: crypto.randomUUID(),
@@ -41,6 +42,13 @@ export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBu
       sort_order: 2
     }
   ]);
+
+  // Set the first field as default display field
+  React.useEffect(() => {
+    if (fields.length > 0 && !displayFieldId) {
+      setDisplayFieldId(fields[0].id);
+    }
+  }, [fields, displayFieldId]);
 
   const fieldTypes: { value: FieldType; label: string }[] = [
     { value: 'text', label: 'Text' },
@@ -117,6 +125,7 @@ export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBu
     formData.append('templateName', templateName);
     formData.append('isDefault', isDefault.toString());
     formData.append('fields', JSON.stringify(fields));
+    formData.append('displayFieldId', displayFieldId);
 
     await createTemplate(formData);
   };
@@ -138,6 +147,28 @@ export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBu
               placeholder="e.g., Sales Lead Template"
               required
             />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="displayField" className="block text-sm font-medium text-gray-700 mb-2">
+              Display Field <span className="text-gray-500">(What shows as the lead name)</span>
+            </label>
+            <select
+              id="displayField"
+              value={displayFieldId}
+              onChange={(e) => setDisplayFieldId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Auto-detect (recommended)</option>
+              {fields.map((field) => (
+                <option key={field.id} value={field.id}>
+                  {field.label || field.field_key}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-gray-500">
+              Choose which field will be shown as the lead name in lists and tables
+            </p>
           </div>
 
           <div className="flex justify-between items-center">

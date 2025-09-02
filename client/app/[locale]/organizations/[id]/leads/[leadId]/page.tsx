@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/app/utils/supabase/server";
 import Link from "next/link";
 import { ArrowLeft, Calendar, User, Mail, Phone, Building, FileText } from "lucide-react";
-import InteractiveStatusBadge from "../../InteractiveStatusBadge";
 import { StatusType } from "@/app/types/status";
 import { getLeadDisplayName } from "@/utils/leadHelpers";
+import LeadStatusBadge from "../LeadStatusBadge";
 
 type PageProps = { 
   params: Promise<{ 
@@ -147,14 +147,10 @@ export default async function LeadDetailPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <InteractiveStatusBadge 
+            <LeadStatusBadge 
+              leadId={lead.id}
+              orgId={orgId}
               status={lead.status as StatusType}
-              onStatusChange={async (newStatus) => {
-                // Handle status update for individual lead page
-                console.log(`Updating lead ${lead.id} to status ${newStatus}`);
-                // You may want to add proper status update logic here
-              }}
-              isUpdating={false}
             />
           </div>
         </div>

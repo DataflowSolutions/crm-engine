@@ -4,6 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import SidebarHamMenu from "@/components/SidebarHamMenu";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
+import { UserProvider } from "@/contexts/UserContext";
 
 export const metadata: Metadata = {
   title: "CRM - Customer Relationship Management",
@@ -22,11 +23,12 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          <div className="flex min-h-screen">
-            {/* Mobile hamburger menu */}
-            <div className="md:hidden">
-              <SidebarHamMenu />
-            </div>
+          <UserProvider>
+            <div className="flex min-h-screen">
+              {/* Mobile hamburger menu */}
+              <div className="md:hidden">
+                <SidebarHamMenu />
+              </div>
             
             {/* Desktop sidebar */}
             <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 z-40">
@@ -38,6 +40,7 @@ export default async function RootLayout({
               {children}
             </div>
           </div>
+          </UserProvider>
         </NextIntlClientProvider>
       </body>
     </html>

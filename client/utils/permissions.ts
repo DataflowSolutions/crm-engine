@@ -58,8 +58,24 @@ export async function isOrganizationCreator(orgId: string, userId: string): Prom
 }
 
 export async function getUserPermissions(orgId: string, userId: string): Promise<UserPermissions> {
-  const role = await getUserRole(orgId, userId);
-  const isOrgCreator = await isOrganizationCreator(orgId, userId);
+  const sb = await createClient();
+  
+  // Single query to get both membership and organization info
+  const { data: membershipData } = await sb
+    .from('memberships')
+    .select(`
+      role,
+      organizations!memberships_organization_id_fkey (
+        owner_id
+      )
+    `)
+    .eq('organization_id', orgId)
+    .eq('user_id', userId)
+    .eq('status', 'accepted')
+    .single();
+  
+  const role = membershipData?.role as UserRole || null;
+  const isOrgCreator = membershipData?.organizations?.[0]?.owner_id === userId;
   
   if (!role) {
     // No membership found - default to no permissions

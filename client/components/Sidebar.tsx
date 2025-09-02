@@ -6,9 +6,9 @@ import { useTranslations } from "next-intl";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { Building2, Users, FileText, Plus, Settings, Home, Layers, User } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ProfileModal from "./ProfileModal";
-import { createClient } from "@/app/utils/supabase/client";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Sidebar() {
   const t = useTranslations();
@@ -23,22 +23,7 @@ export default function Sidebar() {
 
   // Profile modal state
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [user, setUser] = useState<{
-    email?: string;
-    user_metadata?: {
-      display_name?: string;
-    };
-  } | null>(null);
-
-  // Get user data
-  useEffect(() => {
-    async function getUser() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    }
-    getUser();
-  }, []);
+  const { user } = useUser();
 
   // Organization-specific navigation items (filtered by permissions)
   const allOrgNavItems = [
