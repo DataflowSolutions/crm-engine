@@ -22,21 +22,35 @@ export async function createLead(formData: FormData) {
   const organizationId = formData.get("organizationId") as string;
   const templateId = formData.get("templateId") as string;
   const locale = formData.get("locale") as string;
-  const status = formData.get("status") as string;
+  const status = formData.get("status") as string || "draft";
+
+  console.log("🔍 [Create Lead] Template ID received:", templateId);
 
   try {
-    // First, get template fields to know what values to collect
-    const { data: template } = await sb
+    // Get template details to map field values correctly
+    // For universal templates, we need to check both the org ID and universal org ID
+    const { data: template, error: templateError } = await sb
       .from("lead_templates")
       .select(`
+        id,
+        name,
         lead_fields!fld_tpl_fk (
           id,
           field_key,
-          label
+          label,
+          field_type
         )
       `)
       .eq("id", templateId)
+      .or(`organization_id.eq.${organizationId},organization_id.eq.00000000-0000-0000-0000-000000000000`)
       .single();
+
+    if (templateError) {
+      console.log("❌ [Create Lead] Template query failed:", templateError);
+      throw templateError;
+    }
+
+    console.log("✅ [Create Lead] Template found:", template?.name, "with", template?.lead_fields?.length || 0, "fields");
 
     // Collect field values from form data
     const fieldValues: Record<string, string> = {};
@@ -49,78 +63,100 @@ export async function createLead(formData: FormData) {
       });
     }
 
-    // Try optimized function first
-    try {
-      const { data: result, error } = await sb
-        .rpc('create_lead_with_fields', {
-          p_org_id: organizationId,
-          p_template_id: templateId,
-          p_user_id: auth.user.id,
-          p_status: status,
-          p_field_values: fieldValues
-        })
-        .single() as { data: CreateLeadResponse | null; error: unknown };
+    // Debug logging
+    console.log('📊 [Create Lead] Field values collected:', Object.keys(fieldValues).length);
 
-      if (error || !result?.success) {
-        throw new Error(result?.error_message || "Database function failed");
-      }
-
-      // Success - redirect to the leads list
-      redirect(`/${locale}/organizations/${organizationId}/leads`);
-    } catch (dbFunctionError) {
-      console.log('Database function not available, using fallback method:', dbFunctionError);
-      
-      // Fallback to original transactional approach
-      const { data: lead, error: leadError } = await sb
-        .from("leads")
-        .insert({
-          organization_id: organizationId,
-          template_id: templateId,
-          created_by: auth.user.id,
-          status: status
-        })
-        .select()
-        .single();
-
-      if (leadError) {
-        console.error("Error creating lead:", leadError);
-        throw new Error("Failed to create lead");
-      }
-
-      // Insert field values if any
-      if (template?.lead_fields && Object.keys(fieldValues).length > 0) {
-        const fieldValueInserts = template.lead_fields
-          .map((field: { id: string; field_key: string; label: string }) => {
-            const value = fieldValues[field.field_key];
-            if (value) {
-              return {
-                lead_id: lead.id,
-                field_id: field.id,
-                value: value
-              };
-            }
-            return null;
+    // Try optimized database function first (faster path)
+    if (Object.keys(fieldValues).length > 0) {
+      console.log('🚀 [Create Lead] Using optimized database function...');
+      try {
+        const { data: result, error } = await sb
+          .rpc('create_lead_with_fields', {
+            p_org_id: organizationId,
+            p_template_id: templateId,
+            p_user_id: auth.user.id,
+            p_status: status,
+            p_field_values: fieldValues
           })
-          .filter(Boolean);
+          .single() as { data: CreateLeadResponse | null; error: unknown };
 
-        if (fieldValueInserts.length > 0) {
-          const { error: valuesError } = await sb
-            .from("lead_field_values")
-            .insert(fieldValueInserts);
-
-          if (valuesError) {
-            console.error("Error creating field values:", valuesError);
-            // Don't fail the whole operation for field values
-          }
+        if (error || !result?.success) {
+          throw new Error(result?.error_message || "Database function failed");
         }
-      }
 
-      // Redirect to the lead detail page or leads list
-      redirect(`/${locale}/organizations/${organizationId}/leads`);
+        console.log('✅ [Create Lead] Database function succeeded - redirecting');
+        // Fast path success - redirect immediately
+        redirect(`/${locale}/organizations/${organizationId}/leads`);
+      } catch (dbError) {
+        // Re-throw NEXT_REDIRECT errors - these are not actual errors
+        if (dbError && typeof dbError === 'object' && 'digest' in dbError && 
+            (dbError as { digest?: string }).digest?.includes('NEXT_REDIRECT')) {
+          throw dbError;
+        }
+        console.log('⚠️ [Create Lead] Database function failed, using fallback:', dbError);
+      }
+    } else {
+      console.log('📝 [Create Lead] No field values, using simple insert...');
     }
+
+    // Fallback to manual approach
+    console.log('🔄 [Create Lead] Using fallback method');
+    
+    const { data: lead, error: leadError } = await sb
+      .from("leads")
+      .insert({
+        organization_id: organizationId,
+        template_id: templateId,
+        created_by: auth.user.id,
+        status: status
+      })
+      .select()
+      .single();
+
+    if (leadError) {
+      throw leadError;
+    }
+
+    // Insert field values if any (in parallel for better performance)
+    if (template?.lead_fields && Object.keys(fieldValues).length > 0) {
+      const fieldValueInserts = template.lead_fields
+        .map((field: { id: string; field_key: string; label: string }) => {
+          const value = fieldValues[field.field_key];
+          if (value) {
+            return {
+              lead_id: lead.id,
+              field_id: field.id,
+              value: value
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      if (fieldValueInserts.length > 0) {
+        // Don't await - let it run in background for faster response
+        sb.from("lead_field_values")
+          .insert(fieldValueInserts)
+          .then(({ error }) => {
+            if (error) {
+              console.error("Error creating field values:", error);
+            }
+          });
+      }
+    }
+
+    console.log('✅ [Create Lead] Fallback method completed - redirecting');
+    // Immediate redirect for better perceived performance
+    redirect(`/${locale}/organizations/${organizationId}/leads`);
+    
   } catch (error) {
+    // Re-throw NEXT_REDIRECT errors - these are not actual errors
+    if (error && typeof error === 'object' && 'digest' in error && 
+        (error as { digest?: string }).digest?.includes('NEXT_REDIRECT')) {
+      throw error;
+    }
+    
     console.error("Error in createLead:", error);
-    // In a real app, you'd want to show this error to the user
     redirect(`/${locale}/organizations/${organizationId}/leads/new?error=failed`);
   }
 }
@@ -135,65 +171,32 @@ export async function getTemplateForForm(templateId: string, orgId: string) {
   }
 
   try {
-    // Use optimized template function
-    const { data: templates, error } = await sb
-      .rpc('get_templates_comprehensive', {
-        p_org_id: orgId
-      });
-
-    if (error) {
-      throw new Error("Failed to fetch template");
-    }
-
-    const template = templates?.find((t: { template_id: string }) => t.template_id === templateId);
-    
-    if (!template) {
-      throw new Error("Template not found");
-    }
-
-    return {
-      success: true,
-      template: {
-        id: template.template_id,
-        name: template.name,
-        description: template.description,
-        fields: template.fields
-      }
-    };
-  } catch (error) {
-    console.error('Error fetching template:', error);
-    
-    // Fallback to original method
-    const { data: template, error: templateError } = await sb
+    const { data: template, error } = await sb
       .from("lead_templates")
       .select(`
         id,
         name,
-        description,
         lead_fields!fld_tpl_fk (
           id,
           field_key,
           label,
           field_type,
           is_required,
-          sort_order
+          options
         )
       `)
       .eq("id", templateId)
+      .eq("organization_id", orgId)
       .single();
 
-    if (templateError || !template) {
-      throw new Error("Template not found");
+    if (error) {
+      console.error("Error fetching template:", error);
+      return null;
     }
 
-    return {
-      success: true,
-      template: {
-        id: template.id,
-        name: template.name,
-        description: template.description,
-        fields: template.lead_fields || []
-      }
-    };
+    return template;
+  } catch (error) {
+    console.error("Error in getTemplateForForm:", error);
+    return null;
   }
 }

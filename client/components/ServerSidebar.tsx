@@ -25,37 +25,37 @@ export default async function ServerSidebar({
   const allOrgNavItems = [
     { 
       iconName: "Building2", 
-      labelKey: "Nav.dashboard", 
+      labelKey: "dashboard", 
       href: `/${locale}/organizations/${orgId}`,
       permissionRequired: null, // Always visible
     },
     { 
       iconName: "FileText", 
-      labelKey: "Nav.leads", 
+      labelKey: "leads", 
       href: `/${locale}/organizations/${orgId}/leads`,
       permissionRequired: null, // Always visible
     },
     { 
       iconName: "Plus", 
-      labelKey: "Nav.newLead", 
+      labelKey: "new_lead", 
       href: `/${locale}/organizations/${orgId}/leads/new`,
       permissionRequired: 'canCreateLeads',
     },
     { 
       iconName: "Layers", 
-      labelKey: "Nav.templates", 
+      labelKey: "templates", 
       href: `/${locale}/organizations/${orgId}/templates`,
       permissionRequired: 'canViewTemplates',
     },
     { 
       iconName: "Users", 
-      labelKey: "Nav.members", 
+      labelKey: "members", 
       href: `/${locale}/organizations/${orgId}/members`,
       permissionRequired: 'canViewMembers',
     },
     { 
       iconName: "Settings", 
-      labelKey: "Nav.settings", 
+      labelKey: "nav_settings", 
       href: `/${locale}/organizations/${orgId}/settings`,
       permissionRequired: 'canManageOrganization',
     },

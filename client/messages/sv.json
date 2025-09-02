@@ -1,4 +1,11 @@
-{  "Nav": {
+{
+  "dashboard": "Dashboard",
+  "leads": "Leads",
+  "new_lead": "Ny Lead",
+  "templates": "Mallar", 
+  "members": "Medlemmar",
+  "nav_settings": "Inställningar",
+  "Nav": {
     "home": "Hem",
     "organizations": "Organisationer",
     "dashboard": "Dashboard",
@@ -105,6 +112,8 @@
       "noPermission": "Du har inte behörighet att utföra denna åtgärd",
       "selectAll": "Välj alla",
       "deselectAll": "Avmarkera alla",
+      "noFilteredResults": "Inga leads hittades",
+      "noFilteredResultsDescription": "Inga leads matchar dina nuvarande sök- och filterkriterier. Försök justera dina filter.",
       "noLeads": "Inga leads ännu",
       "noLeadsDescription": "Skapa din första lead för att börja hantera dina prospekts, eller importera leads från ett kalkylblad.",
       "cards": {

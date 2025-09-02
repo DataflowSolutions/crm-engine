@@ -1,4 +1,10 @@
 {
+  "dashboard": "Dashboard",
+  "leads": "Leads",
+  "new_lead": "New Lead",
+  "templates": "Templates", 
+  "members": "Members",
+  "nav_settings": "Settings",
   "Nav": {
     "home": "Home",
     "organizations": "Organizations",
@@ -104,6 +110,12 @@
       "thisMonth": "This Month",
       "showingResults": "Showing {count} of {total} leads",
       "noPermission": "You don't have permission to perform this action",
+      "selectAll": "Select All",
+      "deselectAll": "Deselect All",
+      "noFilteredResults": "No leads found", 
+      "noFilteredResultsDescription": "No leads match your current search and filter criteria. Try adjusting your filters.",
+      "noLeads": "No leads yet",
+      "noLeadsDescription": "Create your first lead to start managing your prospects, or import leads from a spreadsheet.",
       "cards": {
         "all": "All leads",
         "approved": "Approved leads",
