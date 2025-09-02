@@ -157,7 +157,6 @@ export default function InteractiveStatusBadge({
 
   const currentWidth = getStatusWidth(status);
   const targetWidth = isTransitioning && transitionToStatus ? getStatusWidth(transitionToStatus) : currentWidth;
-  const isGrowing = isTransitioning && transitionToStatus && getStatusWidth(transitionToStatus) > currentWidth;
   const isShrinking = isTransitioning && transitionToStatus && getStatusWidth(transitionToStatus) < currentWidth;
 
   const handleClick = () => {

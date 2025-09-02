@@ -43,7 +43,13 @@ if (orgErr) redirect(`/organizations/new?error=${encodeURIComponent(orgErr.messa
 // 2) add owner membership for the creator (allowed by memb_insert policy)
 const { error: memErr } = await supabase
   .from('memberships')
-  .insert({ user_id: user.id, organization_id: org.id, role: 'owner', accepted: true });
+  .insert({ 
+    user_id: user.id, 
+    organization_id: org.id, 
+    role: 'owner', 
+    status: 'accepted',
+    accepted: true 
+  });
 if (memErr) redirect(`/organizations/new?error=${encodeURIComponent(memErr.message)}`);
 
 redirect(`/organizations/${org.id}`);

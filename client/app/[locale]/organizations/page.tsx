@@ -55,7 +55,7 @@ export default async function OrganizationsHome() {
       organization:organizations!memberships_organization_id_fkey(id, name)
     `)
     .eq("user_id", user.id)
-    .eq("accepted", true)
+    .eq("status", "accepted")
     .neq("organization_id", "00000000-0000-0000-0000-000000000000"); // Exclude universal template org
 
   console.log("- Membership orgs error:", membershipError);
