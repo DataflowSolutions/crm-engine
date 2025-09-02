@@ -1,3 +1,6 @@
+// Optimized Permissions Utility
+// /utils/permissions-optimized.ts
+
 import { createClient } from '@/app/utils/supabase/server';
 
 export type UserRole = 'owner' | 'admin' | 'member' | 'viewer';
@@ -21,65 +24,46 @@ export interface UserPermissions {
   isOrgCreator: boolean;
 }
 
-export function getRoleLevel(role: UserRole): number {
-  switch (role) {
-    case 'owner': return 1;
-    case 'admin': return 2;
-    case 'member': return 3;
-    case 'viewer': return 4;
-    default: return 5;
-  }
+export interface OrganizationInfo {
+  role: UserRole | null;
+  is_org_creator: boolean;
+  org_name: string;
+  org_slug: string;
 }
 
-export async function getUserRole(orgId: string, userId: string): Promise<UserRole | null> {
-  const sb = await createClient();
-  
-  const { data: membership } = await sb
-    .from('memberships')
-    .select('role')
-    .eq('organization_id', orgId)
-    .eq('user_id', userId)
-    .eq('status', 'accepted')
-    .single();
-  
-  return membership?.role as UserRole || null;
+// Cache for permissions - simple in-memory cache
+const permissionsCache = new Map<string, { permissions: UserPermissions; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCacheKey(userId: string, orgId: string): string {
+  return `${userId}:${orgId}`;
 }
 
-export async function isOrganizationCreator(orgId: string, userId: string): Promise<boolean> {
-  const sb = await createClient();
-  
-  const { data: org } = await sb
-    .from('organizations')
-    .select('owner_id')
-    .eq('id', orgId)
-    .single();
-  
-  return org?.owner_id === userId;
+function isValidCacheEntry(entry: { permissions: UserPermissions; timestamp: number }): boolean {
+  return Date.now() - entry.timestamp < CACHE_TTL;
 }
 
+// Optimized function using database function
 export async function getUserPermissions(orgId: string, userId: string): Promise<UserPermissions> {
+  const cacheKey = getCacheKey(userId, orgId);
+  const cached = permissionsCache.get(cacheKey);
+  
+  if (cached && isValidCacheEntry(cached)) {
+    return cached.permissions;
+  }
+
   const sb = await createClient();
   
-  // Single query to get both membership and organization info
-  const { data: membershipData } = await sb
-    .from('memberships')
-    .select(`
-      role,
-      organizations!memberships_organization_id_fkey (
-        owner_id
-      )
-    `)
-    .eq('organization_id', orgId)
-    .eq('user_id', userId)
-    .eq('status', 'accepted')
-    .single();
-  
-  const role = membershipData?.role as UserRole || null;
-  const isOrgCreator = membershipData?.organizations?.[0]?.owner_id === userId;
-  
-  if (!role) {
-    // No membership found - default to no permissions
-    return {
+  // Use the optimized database function
+  const { data: orgInfo, error } = await sb
+    .rpc('get_user_permissions_fast', {
+      p_user_id: userId,
+      p_org_id: orgId
+    })
+    .single() as { data: OrganizationInfo | null; error: unknown };
+
+  if (error || !orgInfo) {
+    const defaultPermissions: UserPermissions = {
       role: 'viewer',
       canCreateLeads: false,
       canEditLeads: false,
@@ -97,12 +81,23 @@ export async function getUserPermissions(orgId: string, userId: string): Promise
       canExportLeads: false,
       isOrgCreator: false,
     };
+    
+    permissionsCache.set(cacheKey, {
+      permissions: defaultPermissions,
+      timestamp: Date.now()
+    });
+    
+    return defaultPermissions;
   }
 
-  // Organization creator has ultimate permissions
-  if (isOrgCreator) {
-    return {
-      role,
+  const role = orgInfo.role as UserRole;
+  const isOrgCreator = orgInfo.is_org_creator;
+
+  const permissions: UserPermissions = {
+    role: role || 'viewer',
+    isOrgCreator,
+    // Organization creator has ultimate permissions
+    ...(isOrgCreator ? {
       canCreateLeads: true,
       canEditLeads: true,
       canDeleteLeads: true,
@@ -117,15 +112,38 @@ export async function getUserPermissions(orgId: string, userId: string): Promise
       canViewMembers: true,
       canImportLeads: true,
       canExportLeads: true,
-      isOrgCreator: true,
-    };
-  }
+    } : {
+      canCreateLeads: false,
+      canEditLeads: false,
+      canDeleteLeads: false,
+      canViewLeads: false,
+      canCreateTemplates: false,
+      canEditTemplates: false,
+      canDeleteTemplates: false,
+      canViewTemplates: false,
+      canInviteMembers: false,
+      canManageMembers: false,
+      canManageOrganization: false,
+      canViewMembers: false,
+      canImportLeads: false,
+      canExportLeads: false,
+      ...getPermissionsByRole(role || 'viewer')
+    })
+  };
 
-  // Role-based permissions
+  // Cache the result
+  permissionsCache.set(cacheKey, {
+    permissions,
+    timestamp: Date.now()
+  });
+
+  return permissions;
+}
+
+function getPermissionsByRole(role: UserRole): Partial<UserPermissions> {
   switch (role) {
     case 'owner':
       return {
-        role,
         canCreateLeads: true,
         canEditLeads: true,
         canDeleteLeads: true,
@@ -140,19 +158,17 @@ export async function getUserPermissions(orgId: string, userId: string): Promise
         canViewMembers: true,
         canImportLeads: true,
         canExportLeads: true,
-        isOrgCreator: false,
       };
     
     case 'admin':
       return {
-        role,
         canCreateLeads: true,
         canEditLeads: true,
         canDeleteLeads: true,
         canViewLeads: true,
         canCreateTemplates: true,
         canEditTemplates: true,
-        canDeleteTemplates: true,
+        canDeleteTemplates: false, // Admins can't delete templates
         canViewTemplates: true,
         canInviteMembers: true,
         canManageMembers: true,
@@ -160,53 +176,29 @@ export async function getUserPermissions(orgId: string, userId: string): Promise
         canViewMembers: true,
         canImportLeads: true,
         canExportLeads: true,
-        isOrgCreator: false,
       };
     
     case 'member':
       return {
-        role,
         canCreateLeads: true,
         canEditLeads: true,
-        canDeleteLeads: false, // Members can't delete leads
+        canDeleteLeads: false,
         canViewLeads: true,
-        canCreateTemplates: false, // Members can't create templates
+        canCreateTemplates: false,
         canEditTemplates: false,
         canDeleteTemplates: false,
         canViewTemplates: true,
-        canInviteMembers: false, // Members can't invite
+        canInviteMembers: false,
         canManageMembers: false,
         canManageOrganization: false,
         canViewMembers: true,
-        canImportLeads: true,
+        canImportLeads: false,
         canExportLeads: true,
-        isOrgCreator: false,
       };
     
     case 'viewer':
-      return {
-        role,
-        canCreateLeads: false,
-        canEditLeads: false,
-        canDeleteLeads: false,
-        canViewLeads: true,
-        canCreateTemplates: false,
-        canEditTemplates: false,
-        canDeleteTemplates: false,
-        canViewTemplates: true,
-        canInviteMembers: false,
-        canManageMembers: false,
-        canManageOrganization: false,
-        canViewMembers: true,
-        canImportLeads: false,
-        canExportLeads: false,
-        isOrgCreator: false,
-      };
-    
     default:
-      // Fallback to viewer permissions
       return {
-        role: 'viewer',
         canCreateLeads: false,
         canEditLeads: false,
         canDeleteLeads: false,
@@ -221,45 +213,15 @@ export async function getUserPermissions(orgId: string, userId: string): Promise
         canViewMembers: true,
         canImportLeads: false,
         canExportLeads: false,
-        isOrgCreator: false,
       };
   }
 }
 
-export function canPerformAction(userRole: UserRole, isOrgCreator: boolean, action: keyof UserPermissions): boolean {
-  // Organization creator can do everything
-  if (isOrgCreator) return true;
-  
-  const roleLevel = getRoleLevel(userRole);
-  
-  switch (action) {
-    case 'canCreateLeads':
-    case 'canEditLeads':
-    case 'canViewLeads':
-    case 'canImportLeads':
-    case 'canExportLeads':
-      return roleLevel <= 3; // owner, admin, member
-    
-    case 'canDeleteLeads':
-      return roleLevel <= 2; // owner, admin only
-    
-    case 'canCreateTemplates':
-    case 'canEditTemplates':
-    case 'canDeleteTemplates':
-      return roleLevel <= 2; // owner, admin only
-    
-    case 'canViewTemplates':
-    case 'canViewMembers':
-      return roleLevel <= 4; // everyone including viewer
-    
-    case 'canInviteMembers':
-    case 'canManageMembers':
-      return roleLevel <= 2; // owner, admin only
-    
-    case 'canManageOrganization':
-      return roleLevel <= 1; // owner only
-    
-    default:
-      return false;
+// Clear cache when needed
+export function clearPermissionsCache(userId?: string, orgId?: string) {
+  if (userId && orgId) {
+    permissionsCache.delete(getCacheKey(userId, orgId));
+  } else {
+    permissionsCache.clear();
   }
 }
