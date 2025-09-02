@@ -6,6 +6,7 @@ import { Building2, Users, FileText, Plus, Settings, Layers, User, Home, LayoutD
 import LanguageSwitcher from "./LanguageSwitcher";
 import ProfileModal from "./ProfileModal";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useTranslations } from "next-intl";
 
 interface NavItem {
   iconName?: string;
@@ -45,24 +46,7 @@ export default function ClientSidebarWrapper({
 }: ClientSidebarWrapperProps) {
   const pathname = usePathname();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
-  // Simple translation mapping (since we don't have useTranslations in server component)
-  const translations: Record<string, string> = {
-    dashboard: "Dashboard",
-    leads: "All Leads", 
-    new_lead: "New Lead",
-    templates: "Templates",
-    members: "Members",
-    settings: "Settings",
-    "Nav.organizations": "Organizations",
-    "Nav.allOrganizations": "All Organizations",
-    "Nav.newOrganization": "New Organization",
-    "Nav.settings": "Settings",
-    "Nav.privacy": "Privacy Policy",
-    "Nav.tos": "Terms of Service"
-  };
-
-  const t = (key: string) => translations[key] || key;
+  const t = useTranslations();
 
   return (
     <div className="flex flex-col h-full fixed py-6 bg-gradient-to-br from-gray-50 to-gray-100 border-r border-gray-200">

@@ -7,14 +7,14 @@ import SidebarHamMenu from "@/components/SidebarHamMenu";
 
 interface OrganizationLayoutProps {
   children: React.ReactNode;
-  params: { id: string; locale: string };
+  params: Promise<{ id: string; locale: string }>;
 }
 
 export default async function OrganizationLayout({ 
   children, 
   params 
 }: OrganizationLayoutProps) {
-  const { id: orgId, locale } = params;
+  const { id: orgId, locale } = await params;
   const sb = await createClient();
 
   // Check auth

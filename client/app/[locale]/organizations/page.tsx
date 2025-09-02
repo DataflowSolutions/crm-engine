@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/app/utils/supabase/server";
 import { getTranslations } from "next-intl/server";
+import { Building2, Plus, ArrowRight, Users, Calendar } from "lucide-react";
 
 interface Organization {
   id: string;
@@ -80,44 +81,118 @@ export default async function OrganizationsHome() {
   console.log("- Final organization list:", list);
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">{t("Orgs.title")}</h1>
-        <Link
-          href="/organizations/new"
-          className="rounded-md bg-indigo-600 px-4 py-2 text-white font-semibold hover:bg-indigo-700"
-        >
-          {t("Orgs.newButton")}
-        </Link>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="mx-auto max-w-6xl p-6 py-12">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {t("Orgs.title")}
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
+            Choose an organization to access your CRM dashboard, manage leads, and collaborate with your team.
+          </p>
+          
+          <Link
+            href="/organizations/new"
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            {t("Orgs.newButton")}
+          </Link>
+        </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {list.length === 0 && (
-          <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-600">
-            {t("Orgs.noOrgs")}
-            <Link
-              href="/organizations/new"
-              className="ml-1 text-indigo-600 underline"
-            >
-              {t("Orgs.create")}
-            </Link>
+        {/* Organizations Grid */}
+        <div className="max-w-4xl mx-auto">
+          {list.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-300 p-12 shadow-sm">
+                <div className="flex justify-center mb-6">
+                  <div className="p-3 bg-gray-100 rounded-full">
+                    <Building2 className="w-8 h-8 text-gray-400" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Organizations Found</h3>
+                <p className="text-gray-600 mb-6">
+                  {t("Orgs.noOrgs")} Get started by creating your first organization.
+                </p>
+                <Link
+                  href="/organizations/new"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 cursor-pointer"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  {t("Orgs.create")}
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {list.map((org) => (
+                <Link
+                  key={org.id}
+                  href={`/organizations/${org.id}`}
+                  className="group relative bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden"
+                >
+                  {/* Background Decoration */}
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-bl-3xl"></div>
+                  
+                  {/* Organization Icon */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                      <Building2 className="w-6 h-6 text-white" />
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
+
+                  {/* Organization Info */}
+                  <div className="space-y-3">
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">
+                      {org.name}
+                    </h3>
+                    
+                    <p className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-300">
+                      {t("Orgs.openDashboard")}
+                    </p>
+
+                    {/* Stats Preview */}
+                    <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Users className="w-3 h-3" />
+                        <span>Team</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />
+                        <span>Active</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hover Effect Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer Info */}
+        {list.length > 0 && (
+          <div className="text-center mt-12 pt-8 border-t border-gray-200">
+            <p className="text-sm text-gray-500">
+              Need to create a new organization?{" "}
+              <Link
+                href="/organizations/new"
+                className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+              >
+                Click here to get started
+              </Link>
+            </p>
           </div>
         )}
-
-        {list.map((org) => (
-          <Link
-            key={org.id}
-            href={`/organizations/${org.id}`}
-            className="rounded-lg border bg-white p-5 shadow-sm hover:shadow-md"
-          >
-            <div className="text-lg font-semibold text-gray-900">
-              {org.name}
-            </div>
-            <div className="mt-1 text-sm text-gray-500">
-              {t("Orgs.openDashboard")}
-            </div>
-          </Link>
-        ))}
       </div>
     </div>
   );

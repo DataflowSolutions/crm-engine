@@ -45,37 +45,37 @@ export default async function OptimizedSidebar() {
   const allOrgNavItems = [
     { 
       iconName: "Building2", 
-      labelKey: "dashboard", 
+      labelKey: "Nav.dashboard", 
       href: `/${locale}/organizations/${orgId}`,
       permissionRequired: null, // Always visible
     },
     { 
       iconName: "FileText", 
-      labelKey: "leads", 
+      labelKey: "Nav.leads", 
       href: `/${locale}/organizations/${orgId}/leads`,
       permissionRequired: null, // Always visible
     },
     { 
       iconName: "Plus", 
-      labelKey: "new_lead", 
+      labelKey: "Nav.newLead", 
       href: `/${locale}/organizations/${orgId}/leads/new`,
       permissionRequired: 'canCreateLeads',
     },
     { 
       iconName: "Layers", 
-      labelKey: "templates", 
+      labelKey: "Nav.templates", 
       href: `/${locale}/organizations/${orgId}/templates`,
       permissionRequired: 'canViewTemplates',
     },
     { 
       iconName: "Users", 
-      labelKey: "members", 
+      labelKey: "Nav.members", 
       href: `/${locale}/organizations/${orgId}/members`,
       permissionRequired: 'canViewMembers',
     },
     { 
       iconName: "Settings", 
-      labelKey: "settings", 
+      labelKey: "Nav.settings", 
       href: `/${locale}/organizations/${orgId}/settings`,
       permissionRequired: 'canManageOrganization',
     },
