@@ -304,6 +304,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                   <option value="draft">{t('badges.draft')}</option>
                   <option value="approved">{t('badges.approved')}</option>
                   <option value="scheduled">{t('badges.scheduled')}</option>
+                  <option value="should_call">{t('badges.should_call')}</option>
                   <option value="closed">{t('badges.closed')}</option>
                 </select>
               </div>

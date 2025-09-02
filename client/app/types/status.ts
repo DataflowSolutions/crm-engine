@@ -1,1 +1,1 @@
-export type StatusType = "draft" | "approved" | "scheduled" | "closed" | "Godkänd" | "Schemalagd" | "Stängd" | "Utkast";
+export type StatusType = "draft" | "approved" | "scheduled" | "should_call" | "closed" | "Godkänd" | "Schemalagd" | "Stängd" | "Utkast" | "Ska_ringa";

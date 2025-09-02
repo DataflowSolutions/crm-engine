@@ -125,6 +125,7 @@
         "draft": "Draft",
         "approved": "Approved",
         "scheduled": "Scheduled",
+        "should_call": "Should Call",
         "closed": "Closed"
       },
       "importWizard": {

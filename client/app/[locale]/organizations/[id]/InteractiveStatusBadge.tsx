@@ -91,7 +91,7 @@ interface InteractiveStatusBadgeProps {
   isUpdating?: boolean;
 }
 
-const statusOrder: StatusType[] = ['draft', 'approved', 'scheduled', 'closed'];
+const statusOrder: StatusType[] = ['draft', 'approved', 'scheduled', 'should_call', 'closed'];
 
 const getStatusColor = (status: StatusType) => {
   switch (status) {
@@ -101,6 +101,8 @@ const getStatusColor = (status: StatusType) => {
       return 'bg-green-100 text-green-800 border-green-200';
     case 'scheduled':
       return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'should_call':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'closed':
       return 'bg-red-100 text-red-800 border-red-200';
     default:
@@ -130,6 +132,7 @@ export default function InteractiveStatusBadge({
       else if (statusType === 'Schemalagd') normalizedStatus = 'scheduled';
       else if (statusType === 'Stängd') normalizedStatus = 'closed';
       else if (statusType === 'Utkast') normalizedStatus = 'draft';
+      else if (statusType === 'Ska_ringa') normalizedStatus = 'should_call';
       
       return t(normalizedStatus);
     } catch {
@@ -138,11 +141,13 @@ export default function InteractiveStatusBadge({
         draft: 'Draft',
         approved: 'Approved', 
         scheduled: 'Scheduled',
+        should_call: 'Should Call',
         closed: 'Closed',
         'Godkänd': 'Approved',
         'Schemalagd': 'Scheduled',
         'Stängd': 'Closed',
-        'Utkast': 'Draft'
+        'Utkast': 'Draft',
+        'Ska_ringa': 'Should Call'
       };
       return fallbacks[statusType] || statusType;
     }
@@ -151,8 +156,24 @@ export default function InteractiveStatusBadge({
   // Calculate approximate width for different status labels (in pixels)
   const getStatusWidth = (statusType: StatusType): number => {
     const label = getStatusLabel(statusType);
-    // Approximate character width + padding (24px left/right padding + ~6.5px per character)
-    return Math.max(60, 24 + (label.length * 6.5));
+    // More accurate character width calculation + padding
+    // Base padding (24px) + character width (8px per char) + extra buffer for longer text
+    const baseWidth = 24;
+    const charWidth = 8;
+    const calculatedWidth = baseWidth + (label.length * charWidth);
+    
+    // Minimum widths for specific statuses to prevent cramping
+    const minimumWidths: Record<string, number> = {
+      'should_call': 100,
+      'Should Call': 100,
+      'Ska ringa': 100,
+      'scheduled': 90,
+      'approved': 80,
+      'closed': 70,
+      'draft': 60
+    };
+    
+    return Math.max(minimumWidths[label] || 70, calculatedWidth);
   };
 
   const currentWidth = getStatusWidth(status);
@@ -226,10 +247,12 @@ export default function InteractiveStatusBadge({
                 background: `linear-gradient(135deg, 
                   ${transitionToStatus === 'approved' ? 'rgba(34, 197, 94, 0.1)' :
                     transitionToStatus === 'scheduled' ? 'rgba(59, 130, 246, 0.1)' :
+                    transitionToStatus === 'should_call' ? 'rgba(251, 191, 36, 0.1)' :
                     transitionToStatus === 'closed' ? 'rgba(239, 68, 68, 0.1)' :
                     'rgba(107, 114, 128, 0.1)'} 0%, 
                   ${transitionToStatus === 'approved' ? 'rgba(34, 197, 94, 0.9)' :
                     transitionToStatus === 'scheduled' ? 'rgba(59, 130, 246, 0.9)' :
+                    transitionToStatus === 'should_call' ? 'rgba(251, 191, 36, 0.9)' :
                     transitionToStatus === 'closed' ? 'rgba(239, 68, 68, 0.9)' :
                     'rgba(107, 114, 128, 0.9)'} 100%)`,
               }}
@@ -240,6 +263,7 @@ export default function InteractiveStatusBadge({
                 background: `${
                   transitionToStatus === 'approved' ? '#dcfce7' :
                   transitionToStatus === 'scheduled' ? '#dbeafe' :
+                  transitionToStatus === 'should_call' ? '#fef3c7' :
                   transitionToStatus === 'closed' ? '#fee2e2' :
                   '#f3f4f6'
                 }`,
@@ -272,24 +296,34 @@ export default function InteractiveStatusBadge({
           transitionDelay: isExpanded ? '80ms' : '0ms'
         }}
       >
-        {statusOrder.map((statusOption, index) => (
-          <div
-            key={statusOption}
-            className={`
-              px-3 py-1 text-xs font-medium rounded-full border cursor-pointer
-              transition-all duration-400 ease-out
-              ${getStatusColor(statusOption)}
-              ${statusOption === status ? 'ring-2 ring-blue-500' : ''}
-              hover:opacity-80
-            `}
-            style={{
-              transitionDelay: isExpanded ? `${index * 80}ms` : '0ms'
-            }}
-            onClick={() => handleStatusSelect(statusOption)}
-          >
-            {getStatusLabel(statusOption)}
-          </div>
-        ))}
+        {statusOrder.map((statusOption, index) => {
+          const optionLabel = getStatusLabel(statusOption);
+          const minWidth = Math.max(60, optionLabel.length * 8 + 24); // Dynamic width based on text length
+          
+          return (
+            <div
+              key={statusOption}
+              className={`
+                text-xs font-medium rounded-full border cursor-pointer
+                transition-all duration-400 ease-out flex items-center justify-center
+                ${getStatusColor(statusOption)}
+                ${statusOption === status ? 'ring-2 ring-blue-500' : ''}
+                hover:opacity-80
+              `}
+              style={{
+                transitionDelay: isExpanded ? `${index * 80}ms` : '0ms',
+                minWidth: `${minWidth}px`,
+                height: '28px',
+                paddingLeft: '12px',
+                paddingRight: '12px',
+                whiteSpace: 'nowrap'
+              }}
+              onClick={() => handleStatusSelect(statusOption)}
+            >
+              {optionLabel}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
