@@ -21,7 +21,10 @@ export default function AccessDeniedPage({ locale, orgId, orgExists, userEmail }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy text: ', err);
+      // Silently fail - user will see copy didn't work
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to copy text: ', err);
+      }
     }
   };
 

@@ -214,8 +214,8 @@ export async function getOrganizationData(orgId: string, userId: string) {
     }
     
     throw new Error("Database function failed");
-  } catch (dbFunctionError) {
-    console.log('Organization data function not available, using fallback method:', dbFunctionError);
+  } catch {
+    // console.log('Organization data function not available, using fallback method:', dbFunctionError);
     
     // Fallback to separate queries
     const { data: org } = await sb

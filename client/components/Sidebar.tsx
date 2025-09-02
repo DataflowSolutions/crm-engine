@@ -19,7 +19,9 @@ export default function Sidebar() {
   const orgId = params?.id as string;
   const locale = params?.locale as string;
   const isInOrganization = pathname.includes('/organizations/') && orgId && orgId !== 'new';
-  const permissions = usePermissions();
+  
+  // Get permissions (will return null if orgId is empty/invalid)
+  const { permissions } = usePermissions(orgId || '');
 
   // Profile modal state
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -49,13 +51,13 @@ export default function Sidebar() {
       icon: Layers, 
       labelKey: "Nav.templates", 
       href: `/${locale}/organizations/${orgId}/templates`,
-      permissionRequired: 'canManageTemplates',
+      permissionRequired: 'canViewTemplates', // Changed from canManageTemplates
     },
     { 
       icon: Users, 
       labelKey: "Nav.members", 
       href: `/${locale}/organizations/${orgId}/members`,
-      permissionRequired: 'canManageMembers',
+      permissionRequired: 'canViewMembers', // Changed from canManageMembers for navigation visibility
     },
     { 
       icon: Settings, 

@@ -53,25 +53,25 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
   const [dateFilter, setDateFilter] = useState<string>('all');
   const itemsPerPage = 10;
 
-  // Debug permissions
-  console.log('LeadsClient permissions:', permissions);
+  // Debug permissions (remove in production)
+  // console.log('LeadsClient permissions:', permissions);
 
   // Handle status update
   const handleStatusUpdate = async (leadId: string, newStatus: StatusType) => {
-    console.log('handleStatusUpdate called for lead', leadId, 'new status:', newStatus);
-    console.log('Can edit leads:', permissions.canEditLeads);
+    // console.log('handleStatusUpdate called for lead', leadId, 'new status:', newStatus);
+    // console.log('Can edit leads:', permissions.canEditLeads);
     
     if (!permissions.canEditLeads) {
-      console.log('No permission to edit leads');
+      // console.log('No permission to edit leads');
       return;
     }
     
     setUpdatingLeads(prev => new Set([...prev, leadId]));
     
     try {
-      console.log('Calling updateLeadStatus...');
+      // console.log('Calling updateLeadStatus...');
       await updateLeadStatus(leadId, newStatus, orgId);
-      console.log('updateLeadStatus completed successfully');
+      // console.log('updateLeadStatus completed successfully');
       
       // Update local state
       setLeads(prevLeads => {
@@ -80,7 +80,7 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
             ? { ...lead, status: newStatus, updated_at: new Date().toISOString() }
             : lead
         );
-        console.log('Local state updated. Lead status should now be:', newStatus);
+        // console.log('Local state updated. Lead status should now be:', newStatus);
         return updatedLeads;
       });
     } catch (error) {
