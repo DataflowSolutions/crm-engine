@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Upload, Download, CheckCircle, AlertCircle, FileSpreadsheet, X } from 'lucide-react';
+import { ArrowLeft, Upload, Download, CheckCircle, AlertCircle, FileSpreadsheet, X, GripVertical } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 interface Props {
@@ -42,6 +42,8 @@ export default function ImportWizard({ orgId, orgName, userId, locale }: Props) 
   const [importResults, setImportResults] = useState<ImportResults | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [excludedColumns, setExcludedColumns] = useState<Set<number>>(new Set());
+  const [draggedMapping, setDraggedMapping] = useState<number | null>(null);
+  const [dragOverMapping, setDragOverMapping] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const leadFieldOptions = [
@@ -187,12 +189,12 @@ export default function ImportWizard({ orgId, orgName, userId, locale }: Props) 
 
   const updateColumnMapping = (columnIndex: number, updates: Partial<ColumnMapping>) => {
     setColumnMappings(prev => 
-      prev.map((mapping) => mapping.columnIndex === columnIndex ? { ...mapping, ...updates } : mapping)
+      prev.map((mapping) => (mapping && mapping.columnIndex === columnIndex) ? { ...mapping, ...updates } : mapping)
     );
   };
 
   const removeColumn = (columnIndex: number) => {
-    setColumnMappings(prev => prev.filter(mapping => mapping.columnIndex !== columnIndex));
+    setColumnMappings(prev => prev.filter(mapping => mapping && mapping.columnIndex !== columnIndex));
     setExcludedColumns(prev => {
       const newSet = new Set(prev);
       newSet.delete(columnIndex);
@@ -212,10 +214,76 @@ export default function ImportWizard({ orgId, orgName, userId, locale }: Props) 
     });
   };
 
+  const moveMapping = (dragIndex: number, hoverIndex: number) => {
+    setColumnMappings(prev => {
+      const newMappings = [...prev];
+      const draggedItem = newMappings[dragIndex];
+      
+      // Safety check - ensure we have a valid item to move
+      if (!draggedItem) return newMappings;
+      
+      // Remove the dragged item
+      newMappings.splice(dragIndex, 1);
+      // Insert it at the new position
+      newMappings.splice(hoverIndex, 0, draggedItem);
+      
+      return newMappings;
+    });
+  };
+
+  const handleMappingDragStart = (e: React.DragEvent, columnIndex: number) => {
+    setDraggedMapping(columnIndex);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleMappingDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const target = e.currentTarget as HTMLElement;
+    const mappingIndex = target.getAttribute('data-mapping-index');
+    if (mappingIndex && parseInt(mappingIndex) !== draggedMapping) {
+      setDragOverMapping(parseInt(mappingIndex));
+    }
+  };
+
+  const handleMappingDragLeave = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    const mappingIndex = target.getAttribute('data-mapping-index');
+    if (mappingIndex && parseInt(mappingIndex) === dragOverMapping) {
+      setDragOverMapping(null);
+    }
+  };
+
+  const handleMappingDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    
+    const target = e.currentTarget as HTMLElement;
+    const targetIndexStr = target.getAttribute('data-mapping-index');
+    const targetIndex = targetIndexStr ? parseInt(targetIndexStr) : null;
+    
+    if (draggedMapping === null || targetIndex === null || draggedMapping === targetIndex) return;
+    
+    // Safety checks for valid indices
+    if (draggedMapping < 0 || draggedMapping >= columnMappings.length || 
+        targetIndex < 0 || targetIndex >= columnMappings.length) {
+      setDraggedMapping(null);
+      setDragOverMapping(null);
+      return;
+    }
+    
+    const dragIndex = draggedMapping;
+    const hoverIndex = targetIndex;
+    
+    moveMapping(dragIndex, hoverIndex);
+    
+    setDraggedMapping(null);
+    setDragOverMapping(null);
+  };
+
   const handleCreateTemplate = async () => {
     if (!parsedData || !templateName.trim()) return;
 
-    const activeColumnMappings = columnMappings.filter(mapping => !excludedColumns.has(mapping.columnIndex));
+    const activeColumnMappings = columnMappings.filter(mapping => mapping && mapping.columnIndex !== undefined && !excludedColumns.has(mapping.columnIndex));
     console.log('Total column mappings:', columnMappings.length);
     console.log('Excluded columns:', Array.from(excludedColumns));
     console.log('Active column mappings:', activeColumnMappings);
@@ -392,32 +460,153 @@ export default function ImportWizard({ orgId, orgName, userId, locale }: Props) 
               />
             </div>
 
+            {/* Preview Section */}
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Preview: How leads will appear</h4>
+              <div className="bg-white rounded border border-gray-200 p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-4 shadow-sm">
+                    <span className="text-sm font-medium text-white">
+                      {(() => {
+                        const activeColumns = columnMappings.filter(m => m && m.columnIndex !== undefined && !excludedColumns.has(m.columnIndex));
+                        const nameField = activeColumns.find(m => m.leadField === 'name' || (m.leadField === 'custom' && m.customFieldName?.toLowerCase().includes('name')));
+                        const firstField = activeColumns[0];
+                        
+                        if (nameField && parsedData) {
+                          const sampleValue = parsedData.rows
+                            .map(row => row[nameField.columnIndex])
+                            .find(value => value && value.trim());
+                          return sampleValue ? sampleValue.charAt(0).toUpperCase() : 'L';
+                        } else if (firstField && parsedData) {
+                          const sampleValue = parsedData.rows
+                            .map(row => row[firstField.columnIndex])
+                            .find(value => value && value.trim());
+                          return sampleValue ? sampleValue.charAt(0).toUpperCase() : 'L';
+                        }
+                        return 'L';
+                      })()}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-gray-900">
+                      {(() => {
+                        const activeColumns = columnMappings.filter(m => m && m.columnIndex !== undefined && !excludedColumns.has(m.columnIndex));
+                        const nameField = activeColumns.find(m => m.leadField === 'name' || (m.leadField === 'custom' && m.customFieldName?.toLowerCase().includes('name')));
+                        const firstField = activeColumns[0];
+                        
+                        if (nameField && parsedData) {
+                          const sampleValue = parsedData.rows
+                            .map(row => row[nameField.columnIndex])
+                            .find(value => value && value.trim());
+                          return sampleValue || 'Sample Name';
+                        } else if (firstField && parsedData) {
+                          const sampleValue = parsedData.rows
+                            .map(row => row[firstField.columnIndex])
+                            .find(value => value && value.trim());
+                          return sampleValue || 'Sample Value';
+                        }
+                        return 'Lead Name';
+                      })()}
+                    </div>
+                    {(() => {
+                      const activeColumns = columnMappings.filter(m => m && m.columnIndex !== undefined && !excludedColumns.has(m.columnIndex));
+                      const emailField = activeColumns.find(m => m.leadField === 'email');
+                      const displayField = activeColumns.find(m => m.leadField === 'name') || activeColumns[0];
+                      
+                      if (emailField && emailField !== displayField && parsedData) {
+                        const sampleEmail = parsedData.rows
+                          .map(row => row[emailField.columnIndex])
+                          .find(value => value && value.trim() && value.includes('@'));
+                        return (
+                          <div className="text-sm text-gray-500">
+                            {sampleEmail || 'sample@email.com'}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                  <div className="ml-4">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Draft
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                The <strong>
+                {(() => {
+                  const activeColumns = columnMappings.filter(m => m && m.columnIndex !== undefined && !excludedColumns.has(m.columnIndex));
+                  const displayField = activeColumns.find(m => m.leadField === 'name') || activeColumns[0];
+                  if (displayField) {
+                    return displayField.leadField === 'custom' ? displayField.customFieldName : 
+                           leadFieldOptions.find(opt => opt.value === displayField.leadField)?.label;
+                  }
+                  return 'first column';
+                })()}
+                </strong> will be the main display name in your lead list.
+              </p>
+            </div>
+
             {/* Column Mappings with Remove Feature */}
             <div className="space-y-4 mb-6">
+              <p className="text-sm text-gray-500 mb-3">Drag and drop to reorder columns. Order affects how leads are displayed and organized.</p>
               {columnMappings
                 .filter(mapping => {
+                  // Skip undefined mappings
+                  if (!mapping || mapping.columnIndex === undefined) return false;
+                  
+                  // Skip if parsedData is not available
+                  if (!parsedData || !parsedData.rows) return false;
+                  
                   // Only show columns that have actual data
                   const hasData = parsedData.rows
-                    .some(row => row[mapping.columnIndex] && row[mapping.columnIndex].trim());
+                    .some(row => row && row[mapping.columnIndex] && row[mapping.columnIndex].trim());
                   return hasData;
                 })
-                .map((mapping) => {
+                .map((mapping, index) => {
                 const isExcluded = excludedColumns.has(mapping.columnIndex);
                 return (
                   <div 
                     key={mapping.columnIndex} 
-                    className={`p-4 border rounded-lg transition-all ${
-                      isExcluded 
+                    data-mapping-index={index}
+                    className={`p-4 border rounded-lg transition-all relative ${
+                      draggedMapping === index 
+                        ? 'opacity-50 scale-95 bg-gray-50 border-gray-300' 
+                        : dragOverMapping === index
+                        ? 'border-blue-300 bg-blue-50 shadow-md'
+                        : isExcluded 
                         ? 'border-gray-200 bg-gray-50 opacity-50' 
-                        : 'border-gray-300 bg-white'
+                        : 'border-gray-300 bg-white hover:border-gray-400'
                     }`}
+                    draggable={!isExcluded}
+                    onDragStart={(e) => handleMappingDragStart(e, index)}
+                    onDragOver={handleMappingDragOver}
+                    onDragLeave={handleMappingDragLeave}
+                    onDrop={handleMappingDrop}
                   >
                     <div className="flex items-center justify-between mb-3">
+                      {!isExcluded && (
+                        <div className="flex-shrink-0 mr-3 cursor-grab active:cursor-grabbing">
+                          <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                        </div>
+                      )}
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <span className="text-sm font-medium text-gray-900">
                             Column {mapping.columnIndex + 1}: {mapping.columnName}
                           </span>
+                          {/* Display Field Indicator */}
+                          {(() => {
+                            const activeColumns = columnMappings.filter(m => m && m.columnIndex !== undefined && !excludedColumns.has(m.columnIndex));
+                            const isDisplayField = mapping.leadField === 'name' || 
+                                                  (activeColumns.findIndex(m => m.leadField === 'name') === -1 && activeColumns[0] === mapping);
+                            return isDisplayField ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Display Field
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                         {/* Data Preview */}
                         <div className="text-xs text-gray-600">
@@ -519,52 +708,7 @@ export default function ImportWizard({ orgId, orgName, userId, locale }: Props) 
               })}
             </div>
 
-            {/* Preview Table */}
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Preview</h3>
-              <div className="border rounded-lg overflow-hidden">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {columnMappings
-                        .filter(mapping => !excludedColumns.has(mapping.columnIndex))
-                        .map((mapping) => (
-                          <th key={`${mapping.columnIndex}-${mapping.leadField}-${mapping.fieldType}`} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            {mapping.columnName}
-                            <div className="text-xs text-blue-600 normal-case mt-1">
-                              → {mapping.leadField === 'custom' 
-                                  ? mapping.customFieldName || 'Custom Field'
-                                  : leadFieldOptions.find(f => f.value === mapping.leadField)?.label}
-                              <span className="text-gray-500 ml-1">({mapping.fieldType})</span>
-                            </div>
-                          </th>
-                        ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {parsedData.rows.slice(0, 5).map((row, rowIndex) => (
-                      <tr key={rowIndex}>
-                        {columnMappings
-                          .filter(mapping => !excludedColumns.has(mapping.columnIndex))
-                          .map((mapping) => (
-                            <td key={`${rowIndex}-${mapping.columnIndex}`} className="px-4 py-3 text-sm text-gray-900">
-                              {row[mapping.columnIndex] || '-'}
-                            </td>
-                          ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-xs text-gray-500">
-                  Showing first 5 rows. Total rows to import: {parsedData.rows.length}
-                </p>
-                <p className="text-xs text-gray-500">
-                  Columns to import: {columnMappings.length - excludedColumns.size} of {parsedData.headers.length}
-                </p>
-              </div>
-            </div>
+
 
             <div className="flex justify-between">
               <button
@@ -575,7 +719,7 @@ export default function ImportWizard({ orgId, orgName, userId, locale }: Props) 
               </button>
               <button
                 onClick={handleCreateTemplate}
-                disabled={isProcessing || !templateName.trim() || columnMappings.filter(m => !excludedColumns.has(m.columnIndex)).length === 0}
+                disabled={isProcessing || !templateName.trim() || columnMappings.filter(m => m && m.columnIndex !== undefined && !excludedColumns.has(m.columnIndex)).length === 0}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {isProcessing ? 'Creating...' : `Create Template & Import ${parsedData.rows.length} Leads (${columnMappings.length - excludedColumns.size} columns)`}

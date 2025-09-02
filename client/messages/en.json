@@ -179,6 +179,8 @@
       "delete": "Delete Template",
       "universal": "Universal Templates",
       "organization": "Your Organization Templates",
+      "templateCount": "template",
+      "templateCountPlural": "templates",
       "noTemplates": "No templates yet",
       "createFirst": "Create your first template",
       "builder": {

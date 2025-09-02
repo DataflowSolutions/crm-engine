@@ -144,8 +144,7 @@ export default function Sidebar() {
                   : "text-gray-700 hover:bg-white hover:text-blue-600 hover:shadow-md"
               }`}
               style={{ 
-                animationDelay: `${index * 50}ms`,
-                animation: 'slideInLeft 0.4s ease-out forwards'
+                animation: `slideInLeft 0.4s ease-out ${index * 50}ms forwards`
               }}
             >
               <item.icon

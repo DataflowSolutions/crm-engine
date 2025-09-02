@@ -84,6 +84,63 @@ export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBu
     setFields(fields.filter(field => field.id !== id));
   };
 
+  const moveField = (dragIndex: number, hoverIndex: number) => {
+    const draggedField = fields[dragIndex];
+    const newFields = [...fields];
+    newFields.splice(dragIndex, 1);
+    newFields.splice(hoverIndex, 0, draggedField);
+    
+    // Update sort_order for all fields
+    const updatedFields = newFields.map((field, index) => ({
+      ...field,
+      sort_order: index + 1
+    }));
+    
+    setFields(updatedFields);
+  };
+
+    const [draggedField, setDraggedField] = useState<string | null>(null);
+  const [dragOverField, setDragOverField] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, fieldId: string) => {
+    setDraggedField(fieldId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const target = e.currentTarget as HTMLElement;
+    const fieldId = target.getAttribute('data-field-id');
+    if (fieldId && fieldId !== draggedField) {
+      setDragOverField(fieldId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    const fieldId = target.getAttribute('data-field-id');
+    if (fieldId === dragOverField) {
+      setDragOverField(null);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent, targetFieldId: string) => {
+    e.preventDefault();
+    
+    if (!draggedField || draggedField === targetFieldId) return;
+    
+    const dragIndex = fields.findIndex(f => f.id === draggedField);
+    const hoverIndex = fields.findIndex(f => f.id === targetFieldId);
+    
+    if (dragIndex !== -1 && hoverIndex !== -1) {
+      moveField(dragIndex, hoverIndex);
+    }
+    
+    setDraggedField(null);
+    setDragOverField(null);
+  };
+
   const generateFieldKey = (label: string) => {
     return label
       .toLowerCase()
@@ -171,8 +228,72 @@ export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBu
             </p>
           </div>
 
+          {/* Preview Section */}
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg border">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Preview: How leads will appear</h4>
+            <div className="bg-white rounded border border-gray-200 p-4">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-4 shadow-sm">
+                  <span className="text-sm font-medium text-white">
+                    {(() => {
+                      const displayField = fields.find(f => f.id === displayFieldId);
+                      if (displayField) {
+                        return displayField.label.charAt(0).toUpperCase();
+                      }
+                      const autoField = fields.find(f => ['text', 'email'].includes(f.field_type));
+                      return autoField ? autoField.label.charAt(0).toUpperCase() : 'L';
+                    })()}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-gray-900">
+                    {(() => {
+                      const displayField = fields.find(f => f.id === displayFieldId);
+                      if (displayField) {
+                        return `${displayField.label} Value`;
+                      }
+                      const autoField = fields.find(f => ['text', 'email'].includes(f.field_type));
+                      return autoField ? `${autoField.label} Value` : 'Lead Name';
+                    })()}
+                  </div>
+                  {(() => {
+                    const emailField = fields.find(f => f.field_type === 'email');
+                    const currentDisplayField = fields.find(f => f.id === displayFieldId) || 
+                                               fields.find(f => ['text', 'email'].includes(f.field_type));
+                    
+                    // Show email if it exists and isn't the display field
+                    if (emailField && emailField.id !== currentDisplayField?.id) {
+                      return (
+                        <div className="text-sm text-gray-500">
+                          {emailField.label}@example.com
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+                <div className="ml-4">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Draft
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              The <strong>
+              {(() => {
+                const displayField = fields.find(f => f.id === displayFieldId);
+                return displayField ? displayField.label : 'first suitable field';
+              })()}
+              </strong> will be the main display name in your lead list.
+            </p>
+          </div>
+
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">Fields</h3>
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">Fields</h3>
+              <p className="text-sm text-gray-500 mt-1">Drag and drop to reorder fields. Order determines field display priority.</p>
+            </div>
             <button
               type="button"
               onClick={addField}
@@ -186,10 +307,32 @@ export default function TemplateBuilder({ orgId, locale, isDefault }: TemplateBu
 
         <div className="p-6 space-y-4">
           {fields.map((field) => (
-            <div key={field.id} className="border border-gray-200 rounded-lg p-4">
+            <div 
+              key={field.id} 
+              data-field-id={field.id}
+              className={`border rounded-lg p-4 transition-all duration-200 relative ${
+                draggedField === field.id 
+                  ? 'opacity-50 scale-95 bg-gray-50 border-gray-300' 
+                  : dragOverField === field.id
+                  ? 'border-blue-300 bg-blue-50 shadow-md'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, field.id)}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, field.id)}
+            >
+              {/* Display Field Indicator */}
+              {(displayFieldId === field.id || (!displayFieldId && ['text', 'email'].includes(field.field_type) && fields.findIndex(f => ['text', 'email'].includes(f.field_type)) === fields.indexOf(field))) && (
+                <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full shadow-sm">
+                  Display Field
+                </div>
+              )}
+              
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 pt-2">
-                  <GripVertical className="w-4 h-4 text-gray-400" />
+                <div className="flex-shrink-0 pt-2 cursor-grab active:cursor-grabbing">
+                  <GripVertical className="w-4 h-4 text-gray-400 hover:text-gray-600" />
                 </div>
                 
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">

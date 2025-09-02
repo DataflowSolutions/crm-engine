@@ -78,7 +78,9 @@ export default function TemplateCard({ template, orgId, permissions }: TemplateC
       
       <div className="flex items-center justify-between text-sm text-gray-500">
         <span>{template.lead_fields?.length || 0} fields</span>
-        <span>{new Date(template.created_at).toLocaleDateString()}</span>
+        <span suppressHydrationWarning>
+          {new Date(template.created_at).toLocaleDateString()}
+        </span>
       </div>
     </div>
   );
