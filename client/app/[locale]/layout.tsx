@@ -20,7 +20,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <div className="flex min-h-screen">
             {/* Mobile hamburger menu */}
