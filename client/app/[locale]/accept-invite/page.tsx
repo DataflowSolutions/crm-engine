@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { acceptInvite } from '@/app/[locale]/organizations/[id]/members/actions';
+import { acceptInvite } from '../organizations/[id]/members/actions';
 import { createClient } from '@/app/utils/supabase/server';
 
 type PageProps = { 
@@ -22,9 +22,9 @@ export default async function Page({ searchParams, params }: PageProps) {
   try {
     console.log('🔍 [accept-invite page] Starting invite acceptance...');
     const result = await acceptInvite(token);
-    const { organization_id } = result;
-    console.log('🔍 [accept-invite page] Redirecting to organization:', organization_id);
-    redirect(`${base}/organizations/${organization_id}`);
+    const { organizationId } = result;
+    console.log('🔍 [accept-invite page] Redirecting to organization:', organizationId);
+    redirect(`${base}/organizations/${organizationId}`);
   } catch (error) {
     console.error('❌ [accept-invite page] Error accepting invite:', error);
     

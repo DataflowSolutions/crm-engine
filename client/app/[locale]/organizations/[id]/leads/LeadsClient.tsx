@@ -475,8 +475,11 @@ export default function LeadsClient({ leads: initialLeads, orgId, orgName, local
                         key={lead.id} 
                         className={`hover:bg-gray-50/50 transition-all duration-200 ${isSelected ? 'bg-blue-50/50' : ''}`}
                         style={{ 
-                          animationDelay: `${index * 50}ms`,
-                          animation: 'fadeInUp 0.4s ease-out forwards'
+                          animationName: 'fadeInUp',
+                          animationDuration: '0.4s',
+                          animationTimingFunction: 'ease-out',
+                          animationFillMode: 'forwards',
+                          animationDelay: `${index * 50}ms`
                         }}
                       >
                         {permissions.canDeleteLeads && (

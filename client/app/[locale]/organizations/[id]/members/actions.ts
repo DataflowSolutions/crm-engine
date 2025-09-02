@@ -1,356 +1,530 @@
-'use server';
+"use server";
 
-import { createClient } from '@/app/utils/supabase/server';
+import { createClient } from "@/app/utils/supabase/server";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { randomUUID } from 'crypto';
 
+// Type definitions for optimized member data
+type OrganizationMember = {
+  member_id: string;
+  user_id: string | null;
+  email: string;
+  full_name: string | null;
+  role: string;
+  status: string;
+  invited_at: string;
+  accepted: boolean;
+  invited_email: string | null;
+  can_manage: boolean;
+};
+
+// Optimized function to get all organization members
+export async function getOrganizationMembers(orgId: string) {
+  const sb = await createClient();
+
+  const { data: auth } = await sb.auth.getUser();
+  if (!auth?.user) {
+    redirect("/login");
+  }
+
+  try {
+    // Use optimized database function
+    const { data: members, error } = await sb
+      .rpc('get_organization_members', {
+        p_org_id: orgId,
+        p_user_id: auth.user.id
+      }) as { data: OrganizationMember[] | null; error: unknown };
+
+    if (error) {
+      throw new Error("Failed to fetch members");
+    }
+
+    return {
+      success: true,
+      members: members || []
+    };
+  } catch (dbError) {
+    console.log('Database function not available, using fallback method:', dbError);
+    
+    // Fallback to original method
+    const { data: orgData } = await sb
+      .from("organizations")
+      .select("owner_id")
+      .eq("id", orgId)
+      .single();
+
+    if (!orgData) {
+      throw new Error("Organization not found");
+    }
+
+    const { data: requestingMembership } = await sb
+      .from("memberships")
+      .select("role")
+      .eq("organization_id", orgId)
+      .eq("user_id", auth.user.id)
+      .eq("status", "accepted")
+      .single();
+
+    const isOrgCreator = orgData.owner_id === auth.user.id;
+    const canManage = isOrgCreator || requestingMembership?.role === 'admin';
+
+    if (!canManage && !requestingMembership) {
+      throw new Error("Access denied");
+    }
+
+    const { data: members, error: membersError } = await sb
+      .from("memberships")
+      .select(`
+        id,
+        user_id,
+        role,
+        status,
+        invited_at,
+        accepted,
+        invited_email,
+        users (
+          email,
+          full_name
+        )
+      `)
+      .eq("organization_id", orgId)
+      .order("status")
+      .order("role");
+
+    if (membersError) {
+      throw new Error("Failed to fetch members");
+    }
+
+    const formattedMembers = (members || []).map(member => ({
+      member_id: member.id,
+      user_id: member.user_id,
+      email: (member.users as unknown as { email: string })?.email || member.invited_email || '',
+      full_name: (member.users as unknown as { full_name: string })?.full_name || null,
+      role: member.role,
+      status: member.status,
+      invited_at: member.invited_at,
+      accepted: member.accepted,
+      invited_email: member.invited_email,
+      can_manage: canManage
+    }));
+
+    return {
+      success: true,
+      members: formattedMembers
+    };
+  }
+}
+
+// Optimized invite member function (keeps existing logic)
 export async function inviteMember(orgId: string, email: string, role: 'admin' | 'member' | 'viewer') {
   const sb = await createClient();
+  
+  const { data: auth } = await sb.auth.getUser();
+  if (!auth?.user) {
+    redirect("/login");
+  }
   
   // Generate a secure random UUID token
   const token = randomUUID();
   
-  // Check if user already has a membership
-  const { data: existing } = await sb
-    .from('memberships')
-    .select('id, status, invited_email, users(email)')
-    .eq('organization_id', orgId)
-    .or(`invited_email.eq.${email},users.email.eq.${email}`)
-    .maybeSingle();
+  try {
+    // Check if user already has a membership
+    const { data: existing } = await sb
+      .from('memberships')
+      .select('id, status, invited_email, users(email)')
+      .eq('organization_id', orgId)
+      .or(`invited_email.eq.${email},users.email.eq.${email}`)
+      .maybeSingle();
 
-  if (existing) {
-    if (existing.status === 'accepted') {
-      throw new Error('User is already a member of this organization');
-    } else if (existing.status === 'invited') {
-      throw new Error('User already has a pending invitation');
+    if (existing) {
+      if (existing.status === 'accepted') {
+        throw new Error('User is already a member of this organization');
+      } else if (existing.status === 'invited') {
+        throw new Error('User already has a pending invitation');
+      }
     }
-  }
 
-  // RLS requires admin: insert invited row with status='invited'
-  const { data, error } = await sb
-    .from('memberships')
-    .insert({ 
-      organization_id: orgId, 
-      invited_email: email, 
-      role, 
-      status: 'invited',
-      invited_token: token,
-      invited_at: new Date().toISOString(),
-      invited_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
-    })
-    .select('id, invited_token')
-    .single();
-  
-  if (error) {
-    console.error('❌ [inviteMember] error:', error);
-    throw new Error('Failed to create invitation. Please try again.');
+    // Insert invited row with status='invited'
+    const { data, error } = await sb
+      .from('memberships')
+      .insert({ 
+        organization_id: orgId, 
+        invited_email: email, 
+        role, 
+        status: 'invited',
+        invited_token: token,
+        invited_at: new Date().toISOString(),
+        invited_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+      })
+      .select('id, invited_token')
+      .single();
+    
+    if (error) {
+      console.error('❌ [inviteMember] error:', error);
+      throw new Error('Failed to create invitation. Please try again.');
+    }
+    
+    // Revalidate members page
+    revalidatePath(`/organizations/${orgId}/members`);
+    
+    return { 
+      success: true,
+      token: data.invited_token as string, 
+      membershipId: data.id as string 
+    };
+  } catch (error) {
+    console.error('Error inviting member:', error);
+    throw error;
   }
-  
-  return { token: data.invited_token as string, membershipId: data.id as string };
 }
 
+// Optimized function to update member role
+export async function updateMemberRole(orgId: string, membershipId: string, newRole: 'owner' | 'admin' | 'member' | 'viewer') {
+  const sb = await createClient();
+
+  const { data: auth } = await sb.auth.getUser();
+  if (!auth?.user) {
+    redirect("/login");
+  }
+
+  try {
+    // Check permissions (must be org creator or admin)
+    const { data: permissions } = await sb
+      .rpc('get_user_permissions_fast', {
+        p_user_id: auth.user.id,
+        p_org_id: orgId
+      })
+      .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
+
+    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+      throw new Error("Access denied");
+    }
+
+    // Update the member role
+    const { error } = await sb
+      .from('memberships')
+      .update({ role: newRole })
+      .eq('id', membershipId)
+      .eq('organization_id', orgId);
+
+    if (error) {
+      throw new Error(`Failed to update member role: ${error.message}`);
+    }
+
+    revalidatePath(`/organizations/${orgId}/members`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating member role:', error);
+    throw error;
+  }
+}
+
+// Optimized function to remove member
+export async function removeMember(orgId: string, membershipId: string) {
+  const sb = await createClient();
+
+  const { data: auth } = await sb.auth.getUser();
+  if (!auth?.user) {
+    redirect("/login");
+  }
+
+  try {
+    // Check permissions (must be org creator or admin)
+    const { data: permissions } = await sb
+      .rpc('get_user_permissions_fast', {
+        p_user_id: auth.user.id,
+        p_org_id: orgId
+      })
+      .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
+
+    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+      throw new Error("Access denied");
+    }
+
+    // Get membership details to check if it's the org creator
+    const { data: membership } = await sb
+      .from('memberships')
+      .select('user_id')
+      .eq('id', membershipId)
+      .eq('organization_id', orgId)
+      .single();
+
+    if (!membership) {
+      throw new Error("Member not found");
+    }
+
+    // Check if trying to remove the organization creator
+    const { data: org } = await sb
+      .from('organizations')
+      .select('owner_id')
+      .eq('id', orgId)
+      .single();
+
+    if (org && org.owner_id === membership.user_id) {
+      throw new Error("Cannot remove the organization creator");
+    }
+
+    // Remove the member
+    const { error } = await sb
+      .from('memberships')
+      .delete()
+      .eq('id', membershipId)
+      .eq('organization_id', orgId);
+
+    if (error) {
+      throw new Error(`Failed to remove member: ${error.message}`);
+    }
+
+    revalidatePath(`/organizations/${orgId}/members`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error removing member:', error);
+    throw error;
+  }
+}
+
+// Function to accept invite (optimized with better error handling)
 export async function acceptInvite(token: string) {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  console.log('🔍 [acceptInvite] Debug info:');
-  console.log('- Token:', token);
-  console.log('- User email:', user.email);
+  try {
+    // First, check if the user exists in our public users table
+    console.log('🔍 [acceptInvite] Checking if user exists in public.users...');
+    const { data: existingUser, error: checkError } = await sb
+      .from('users')
+      .select('id, email, full_name')
+      .eq('id', user.id)
+      .single();
 
-  // Use the PostgreSQL function that handles invite acceptance with proper security
-  const { data: claimResult, error: claimError } = await sb.rpc('claim_invitation', {
-    invitation_token: token,
-    user_email: user.email,
-    user_id_param: user.id
-  });
+    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = not found
+      console.error('❌ [acceptInvite] Error checking existing user:', checkError);
+      throw new Error(`Failed to verify user profile: ${checkError.message}`);
+    }
 
-  console.log('- Claim error:', claimError);
-  console.log('- Claim result:', claimResult);
-
-  if (claimError) {
-    // If the RPC function doesn't exist yet (before migration), fall back to direct update
-    if (claimError.message?.includes('function claim_invitation') || claimError.code === '42883') {
-      console.log('- RPC function not available, using fallback approach...');
-      
-      const { data: updateResult, error: updateError } = await sb
-        .from('memberships')
-        .update({ 
-          user_id: user.id, 
-          status: 'accepted',
-          accepted: true
+    if (!existingUser) {
+      // User doesn't exist, try to create using the database function
+      console.log('🔍 [acceptInvite] User not found, calling ensure_user_exists...');
+      const { data: userData, error: userError } = await sb
+        .rpc('ensure_user_exists', {
+          p_user_id: user.id,
+          p_email: user.email!,
+          p_full_name: user.user_metadata?.full_name || null
         })
-        .eq('invited_token', token)
-        .eq('invited_email', user.email)
-        .eq('status', 'invited')
-        .is('user_id', null)
-        .select('organization_id, invited_email, invited_at')
-        .maybeSingle();
+        .single();
 
-      console.log('- Fallback update error:', updateError);
-      console.log('- Fallback update result:', updateResult);
+      console.log('🔍 [acceptInvite] ensure_user_exists result:', { userData, userError });
 
-      if (updateError) {
-        console.error('❌ [acceptInvite] Fallback error:', updateError);
-        throw new Error('Failed to accept invitation. Please ensure the invitation token is valid and matches your email address.');
+      if (userError) {
+        console.error('❌ [acceptInvite] Error ensuring user exists:', {
+          message: userError.message,
+          code: userError.code,
+          details: userError.details,
+          hint: userError.hint
+        });
+        
+        // Check if user was created despite the error (some functions return errors even on success)
+        const { data: recheckUser } = await sb
+          .from('users')
+          .select('id, email, full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (!recheckUser) {
+          throw new Error(`Failed to create user profile: ${userError.message}. Please contact support if this persists.`);
+        }
+        
+        console.log('✅ [acceptInvite] User was created despite RPC error');
       }
-
-      if (!updateResult) {
-        throw new Error('Invalid invitation token, wrong email, or invitation already claimed');
-      }
-
-      return { organization_id: updateResult.organization_id as string };
+    } else {
+      console.log('✅ [acceptInvite] User already exists, continuing...');
     }
-    
-    console.error('❌ [acceptInvite] RPC error:', claimError);
-    throw new Error('Failed to process invitation. Please try again or contact support.');
-  }
 
-  if (!claimResult || !claimResult.success) {
-    const errorMessage = claimResult?.error || 'Unknown error occurred';
-    throw new Error(errorMessage);
-  }
+    // Use the PostgreSQL function that handles invite acceptance with proper security
+    const { data: claimResult, error: claimError } = await sb.rpc('claim_invitation', {
+      invitation_token: token,
+      user_email: user.email,
+      user_id_param: user.id
+    });
 
-  return { organization_id: claimResult.organization_id as string };
-}
+    if (claimError) {
+      // If the RPC function doesn't exist yet, fall back to direct update
+      if (claimError.message?.includes('function claim_invitation') || claimError.code === '42883') {
+        console.log('RPC function not available, using fallback approach...');
+        
+        const { data: updateResult, error: updateError } = await sb
+          .from('memberships')
+          .update({ 
+            user_id: user.id, 
+            status: 'accepted',
+            accepted: true
+          })
+          .eq('invited_token', token)
+          .eq('invited_email', user.email)
+          .eq('status', 'invited')
+          .is('user_id', null)
+          .select('organization_id, invited_email, invited_at')
+          .maybeSingle();
 
-export async function updateMemberRole(membershipId: string, role: 'owner' | 'admin' | 'member' | 'viewer') {
-  const sb = await createClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-  
-  // Fetch the membership being modified
-  const { data: memb, error: mErr } = await sb
-    .from('memberships')
-    .select('id, organization_id, role, status, user_id')
-    .eq('id', membershipId)
-    .single();
-    
-  if (mErr || !memb) throw mErr || new Error('Membership not found');
+        if (updateError) {
+          console.error('❌ [acceptInvite] Fallback error:', updateError);
+          throw new Error('Failed to accept invitation. Please ensure the invitation token is valid and matches your email address.');
+        }
 
-  // Get organization info to check if current user is the creator/founder
-  const { data: org, error: orgError } = await sb
-    .from('organizations')
-    .select('owner_id')
-    .eq('id', memb.organization_id)
-    .single();
-    
-  if (orgError || !org) throw orgError || new Error('Organization not found');
+        if (!updateResult) {
+          throw new Error('Invalid invitation token, wrong email, or invitation already claimed');
+        }
 
-  const isOrgCreator = org.owner_id === user.id;
-
-  // NO ONE can change their own role (including founders)
-  if (memb.user_id === user.id) {
-    throw new Error('You cannot change your own role');
-  }
-
-  // Organization creator has ultimate power over OTHER members
-  if (isOrgCreator) {
-    // Creator can modify anyone else's role - skip other checks
-  } else {
-    // Get current user's membership to check their role (non-creators follow normal rules)
-    const { data: currentUserMembership, error: currentUserError } = await sb
-      .from('memberships')
-      .select('role, organization_id')
-      .eq('user_id', user.id)
-      .eq('status', 'accepted')
-      .single();
+        return {
+          success: true,
+          organizationId: updateResult.organization_id,
+          message: 'Invitation accepted successfully!'
+        };
+      }
       
-    if (currentUserError || !currentUserMembership) {
-      throw new Error('You are not a member of this organization');
+      throw new Error(claimError.message || 'Failed to accept invitation');
     }
 
-    // Helper function to get role hierarchy level (lower number = higher authority)
-    const getRoleLevel = (role: string): number => {
-      switch (role) {
-        case 'owner': return 1;
-        case 'admin': return 2;
-        case 'member': return 3;
-        case 'viewer': return 4;
-        default: return 5;
-      }
+    return {
+      success: true,
+      organizationId: claimResult?.organization_id,
+      message: 'Invitation accepted successfully!'
     };
-
-    const currentUserRoleLevel = getRoleLevel(currentUserMembership.role);
-    
-    // Only admin and owner can change roles
-    if (currentUserRoleLevel > 2) {
-      throw new Error('Only admins and owners can change member roles');
-    }
-
-    // Ensure the membership is from the same organization
-    if (memb.organization_id !== currentUserMembership.organization_id) {
-      throw new Error('Cannot modify member from different organization');
-    }
-
-    // Prevent users from changing their own role if they are the owner
-    if (memb.user_id === user.id && memb.role === 'owner') {
-      throw new Error('You cannot change your own role as owner');
-    }
-
-    const targetRoleLevel = getRoleLevel(memb.role);
-    const newRoleLevel = getRoleLevel(role);
-
-    // Cannot modify someone with same or higher authority
-    if (targetRoleLevel <= currentUserRoleLevel && memb.user_id !== user.id) {
-      throw new Error('You cannot modify someone with the same or higher role');
-    }
-
-    // Cannot assign a role equal to or higher than your own (unless you're owner)
-    if (newRoleLevel <= currentUserRoleLevel && currentUserMembership.role !== 'owner') {
-      throw new Error('You cannot assign a role equal to or higher than your own');
-    }
+  } catch (error) {
+    console.error('Error accepting invite:', error);
+    throw error;
   }
-
-  // Optional: app-side "cannot demote last owner" check
-  if (memb.role === 'owner' && role !== 'owner') {
-    const { count } = await sb
-      .from('memberships')
-      .select('id', { count: 'exact', head: true })
-      .eq('organization_id', memb.organization_id)
-      .eq('role', 'owner')
-      .eq('status', 'accepted');
-    if ((count ?? 0) <= 1) throw new Error('Cannot demote the only owner');
-  }
-
-  const { error } = await sb
-    .from('memberships')
-    .update({ role })
-    .eq('id', membershipId);
-  if (error) throw error;
 }
 
-export async function removeMember(membershipId: string) {
+// Optimized function to resend an invitation
+export async function resendInvite(orgId: string, membershipId: string) {
   const sb = await createClient();
-  const { data: { user } } = await sb.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-  
-  // Fetch the membership being removed
-  const { data: memb, error: mErr } = await sb
-    .from('memberships')
-    .select('id, organization_id, role, status, user_id')
-    .eq('id', membershipId)
-    .single();
-    
-  if (mErr || !memb) throw mErr || new Error('Membership not found');
 
-  // Get organization info to check if current user is the creator/founder
-  const { data: org, error: orgError } = await sb
-    .from('organizations')
-    .select('owner_id')
-    .eq('id', memb.organization_id)
-    .single();
-    
-  if (orgError || !org) throw orgError || new Error('Organization not found');
-
-  const isOrgCreator = org.owner_id === user.id;
-
-  // NO ONE can remove themselves (including founders)
-  if (memb.user_id === user.id) {
-    throw new Error('You cannot remove yourself');
+  const { data: auth } = await sb.auth.getUser();
+  if (!auth?.user) {
+    redirect("/login");
   }
 
-  // Organization creator has ultimate power over OTHER members
-  if (isOrgCreator) {
-    // Creator can remove anyone else - skip other permission checks
-  } else {
-    // Get current user's membership to check their role (non-creators follow normal rules)
-    const { data: currentUserMembership, error: currentUserError } = await sb
+  try {
+    // Check permissions (must be org creator or admin)
+    const { data: permissions } = await sb
+      .rpc('get_user_permissions_fast', {
+        p_user_id: auth.user.id,
+        p_org_id: orgId
+      })
+      .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
+
+    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+      throw new Error("Access denied");
+    }
+
+    // Get the existing membership to resend
+    const { data: membership } = await sb
       .from('memberships')
-      .select('role, organization_id')
-      .eq('user_id', user.id)
-      .eq('status', 'accepted')
+      .select('invited_email, role')
+      .eq('id', membershipId)
+      .eq('organization_id', orgId)
+      .eq('status', 'invited')
       .single();
-      
-    if (currentUserError || !currentUserMembership) {
-      throw new Error('You are not a member of this organization');
+
+    if (!membership) {
+      throw new Error("Invitation not found or already accepted");
     }
 
-    // Helper function to get role hierarchy level (lower number = higher authority)
-    const getRoleLevel = (role: string): number => {
-      switch (role) {
-        case 'owner': return 1;
-        case 'admin': return 2;
-        case 'member': return 3;
-        case 'viewer': return 4;
-        default: return 5;
-      }
-    };
+    // Generate new token and extend expiration
+    const newToken = randomUUID();
+    const newExpirationDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
 
-    const currentUserRoleLevel = getRoleLevel(currentUserMembership.role);
-    
-    // Only admin and owner can remove people
-    if (currentUserRoleLevel > 2) {
-      throw new Error('Only admins and owners can remove members');
-    }
-
-    // Ensure the membership is from the same organization
-    if (memb.organization_id !== currentUserMembership.organization_id) {
-      throw new Error('Cannot remove member from different organization');
-    }
-
-    const targetRoleLevel = getRoleLevel(memb.role);
-    const isTargetCurrentUser = memb.user_id === user.id;
-
-    // Prevent users from removing themselves if they are the owner
-    if (isTargetCurrentUser && memb.role === 'owner') {
-      throw new Error('You cannot remove yourself as owner');
-    }
-
-    // Cannot remove someone with same or higher authority
-    if (targetRoleLevel <= currentUserRoleLevel && !isTargetCurrentUser) {
-      throw new Error('You cannot remove someone with the same or higher role');
-    }
-  }
-
-  // Prevent removing last owner (applies to everyone including creators)
-  if (memb.role === 'owner' && memb.status === 'accepted') {
-    const { count } = await sb
+    // Update the membership with new token and expiration
+    const { error } = await sb
       .from('memberships')
-      .select('id', { count: 'exact', head: true })
-      .eq('organization_id', memb.organization_id)
-      .eq('role', 'owner')
-      .eq('status', 'accepted');
-    if ((count ?? 0) <= 1) throw new Error('Cannot remove the only owner');
+      .update({
+        invited_token: newToken,
+        invited_expires_at: newExpirationDate.toISOString(),
+        invited_at: new Date().toISOString() // Update invitation time
+      })
+      .eq('id', membershipId)
+      .eq('organization_id', orgId);
+
+    if (error) {
+      throw new Error(`Failed to resend invitation: ${error.message}`);
+    }
+
+    revalidatePath(`/organizations/${orgId}/members`);
+    
+    return {
+      success: true,
+      token: newToken,
+      message: `Invitation resent to ${membership.invited_email}`
+    };
+  } catch (error) {
+    console.error('Error resending invite:', error);
+    throw error;
+  }
+}
+
+// Optimized function to revoke an invitation
+export async function revokeInvite(orgId: string, membershipId: string) {
+  const sb = await createClient();
+
+  const { data: auth } = await sb.auth.getUser();
+  if (!auth?.user) {
+    redirect("/login");
   }
 
-  const { error } = await sb
-    .from('memberships')
-    .delete()
-    .eq('id', membershipId);
-  if (error) throw error;
-}
+  try {
+    // Check permissions (must be org creator or admin)
+    const { data: permissions } = await sb
+      .rpc('get_user_permissions_fast', {
+        p_user_id: auth.user.id,
+        p_org_id: orgId
+      })
+      .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
 
-export async function revokeInvite(membershipId: string) {
-  const sb = await createClient();
-  const { error } = await sb
-    .from('memberships')
-    .delete()
-    .eq('id', membershipId)
-    .eq('status', 'invited');
-  if (error) throw error;
-}
+    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+      throw new Error("Access denied");
+    }
 
-export async function resendInvite(membershipId: string) {
-  const sb = await createClient();
-  
-  // Generate a new secure random UUID token
-  const newToken = randomUUID();
-  
-  // Update the invitation with new token and reset the invitation date
-  const { data, error } = await sb
-    .from('memberships')
-    .update({
-      invited_token: newToken,
-      invited_at: new Date().toISOString(),
-      invited_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
-    })
-    .eq('id', membershipId)
-    .eq('status', 'invited')
-    .select('invited_token, invited_email, organization_id')
-    .single();
+    // Get the membership to verify it's a pending invitation
+    const { data: membership } = await sb
+      .from('memberships')
+      .select('invited_email, status')
+      .eq('id', membershipId)
+      .eq('organization_id', orgId)
+      .single();
+
+    if (!membership) {
+      throw new Error("Membership not found");
+    }
+
+    if (membership.status === 'accepted') {
+      throw new Error("Cannot revoke an accepted membership. Use remove member instead.");
+    }
+
+    // Delete the invitation
+    const { error } = await sb
+      .from('memberships')
+      .delete()
+      .eq('id', membershipId)
+      .eq('organization_id', orgId)
+      .eq('status', 'invited'); // Extra safety check
+
+    if (error) {
+      throw new Error(`Failed to revoke invitation: ${error.message}`);
+    }
+
+    revalidatePath(`/organizations/${orgId}/members`);
     
-  if (error) throw error;
-  if (!data) throw new Error('Invitation not found or already accepted');
-  
-  return data; // contains new invited_token for building the URL
+    return {
+      success: true,
+      message: `Invitation to ${membership.invited_email} has been revoked`
+    };
+  } catch (error) {
+    console.error('Error revoking invite:', error);
+    throw error;
+  }
 }

@@ -264,7 +264,7 @@ export default function MembersClient({ org, memberships, locale, currentUserId,
     
     startTransition(async () => {
       try {
-        await updateMemberRole(membershipId, newRole);
+        await updateMemberRole(org.id, membershipId, newRole);
         addToast('Member role updated successfully', 'success');
         router.refresh();
       } catch (error) {
@@ -298,7 +298,7 @@ export default function MembersClient({ org, memberships, locale, currentUserId,
     
     startTransition(async () => {
       try {
-        await removeMember(membershipId);
+        await removeMember(org.id, membershipId);
         addToast('Member removed successfully', 'success');
         router.refresh();
       } catch (error) {
@@ -311,7 +311,7 @@ export default function MembersClient({ org, memberships, locale, currentUserId,
   const handleRevoke = async (membershipId: string) => {
     startTransition(async () => {
       try {
-        await revokeInvite(membershipId);
+        await revokeInvite(org.id, membershipId);
         addToast('Invitation revoked successfully', 'success');
         router.refresh();
       } catch (error) {
@@ -324,9 +324,9 @@ export default function MembersClient({ org, memberships, locale, currentUserId,
   const handleResend = async (membershipId: string) => {
     startTransition(async () => {
       try {
-        const { invited_token } = await resendInvite(membershipId);
+        const { token } = await resendInvite(org.id, membershipId);
         const origin = window.location.origin;
-        const link = `${origin}/${locale}/accept-invite?token=${invited_token}`;
+        const link = `${origin}/${locale}/accept-invite?token=${token}`;
         setCopyableLink(link);
         addToast('Invitation link refreshed', 'success');
       } catch (error) {

@@ -34,7 +34,7 @@ export default function StatusBadge({ status }: { status: StatusType }) {
     Godkänd: t("Orgs.leads.badges.approved"),
     Schemalagd: t("Orgs.leads.badges.scheduled"),
     Utkast: t("Orgs.leads.badges.draft"),
-    draft: "Draft",
+    draft: t("Orgs.leads.badges.draft"),
     approved: t("Orgs.leads.badges.approved"),
     scheduled: t("Orgs.leads.badges.scheduled"),
     closed: t("Orgs.leads.badges.closed"),

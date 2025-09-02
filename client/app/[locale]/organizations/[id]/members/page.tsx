@@ -63,7 +63,7 @@ export default async function Page({ params }: PageProps) {
   if (memErr) throw memErr;
 
   // Get user permissions
-  const userPermissions = await getUserPermissions(auth.user.id, orgId);
+  const userPermissions = await getUserPermissions(orgId, auth.user.id);
 
   return <MembersClient 
     org={org} 

@@ -53,13 +53,6 @@ export async function POST(
       return NextResponse.json({ error: "Failed to create template" }, { status: 500 });
     }
 
-    // Get existing field keys to avoid duplicates
-    const { data: existingFields } = await supabase
-      .from("lead_fields")
-      .select("field_key");
-
-    const existingKeys = new Set(existingFields?.map(f => f.field_key) || []);
-
     // Generate unique field keys and create lead fields
     const leadFields: {
       template_id: string;
@@ -69,7 +62,8 @@ export async function POST(
       is_required: boolean;
       sort_order: number;
     }[] = [];
-    const fieldKeyMap: { [key: number]: string } = {}; // Maps column index to actual field_key
+    const fieldKeyMap: { [key: number]: string } = {}; // Maps mapping index to actual field_key
+    const existingKeys = new Set<string>();
 
     for (let order = 0; order < columnMappings.length; order++) {
       const mapping = columnMappings[order];
@@ -84,49 +78,31 @@ export async function POST(
         baseKey = mapping.leadField;
       }
 
-      // Check if this is a standard field that should be reused
-      if (['name', 'email', 'phone', 'company', 'status'].includes(baseKey)) {
-        fieldKeyMap[order] = baseKey;
-        // For standard fields, check if they already exist
-        if (!existingKeys.has(baseKey)) {
-          leadFields.push({
-            template_id: template.id,
-            label: mapping.leadField === 'custom' 
-              ? (mapping.customFieldName || mapping.columnName)
-              : mapping.columnName,
-            field_key: baseKey,
-            field_type: mapping.fieldType,
-            is_required: false,
-            sort_order: order + 1
-          });
-          existingKeys.add(baseKey);
-        }
-      } else {
-        // For custom fields, ensure uniqueness
-        let uniqueKey = baseKey;
-        let counter = 1;
-        
-        while (existingKeys.has(uniqueKey)) {
-          uniqueKey = `${baseKey}_${counter}`;
-          counter++;
-        }
-        
-        fieldKeyMap[order] = uniqueKey;
-        leadFields.push({
-          template_id: template.id,
-          label: mapping.leadField === 'custom' 
-            ? (mapping.customFieldName || mapping.columnName)
-            : mapping.columnName,
-          field_key: uniqueKey,
-          field_type: mapping.fieldType,
-          is_required: false,
-          sort_order: order + 1
-        });
-        existingKeys.add(uniqueKey);
+      // Ensure uniqueness within this template
+      let uniqueKey = baseKey;
+      let counter = 1;
+      
+      while (existingKeys.has(uniqueKey)) {
+        uniqueKey = `${baseKey}_${counter}`;
+        counter++;
       }
+      
+      fieldKeyMap[order] = uniqueKey;
+      existingKeys.add(uniqueKey);
+      
+      leadFields.push({
+        template_id: template.id,
+        label: mapping.leadField === 'custom' 
+          ? (mapping.customFieldName || mapping.columnName)
+          : mapping.columnName,
+        field_key: uniqueKey,
+        field_type: mapping.fieldType,
+        is_required: false,
+        sort_order: order + 1
+      });
     }
 
-    // Insert only new fields
+    // Insert all fields for this template
     if (leadFields.length > 0) {
       const { error: fieldsError } = await supabase
         .from("lead_fields")
@@ -143,7 +119,7 @@ export async function POST(
       }
     }
 
-    // Get all fields for this template (both new and existing)
+    // Get all fields for this specific template
     const { data: allTemplateFields, error: getAllFieldsError } = await supabase
       .from("lead_fields")
       .select("*")
@@ -216,8 +192,8 @@ export async function POST(
           };
         }).filter(Boolean);
 
-        console.log(`Row ${rowIndex + 2}: Created ${fieldValues.length} field values for ${columnMappings.length} mappings`);
-        console.log(`Field values for row ${rowIndex + 2}:`, fieldValues.map(fv => fv ? { field_id: fv.field_id, value: fv.value } : null).filter(Boolean));
+       // console.log(`Row ${rowIndex + 2}: Created ${fieldValues.length} field values for ${columnMappings.length} mappings`);
+        //console.log(`Field values for row ${rowIndex + 2}:`, fieldValues.map(fv => fv ? { field_id: fv.field_id, value: fv.value } : null).filter(Boolean));
 
         if (fieldValues.length > 0) {
           const { error: valuesError } = await supabase
