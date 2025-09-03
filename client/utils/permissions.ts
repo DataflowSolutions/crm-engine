@@ -1,6 +1,7 @@
-// Optimized Permissions Utility with Session Caching
+// Optimized Permissions Utility with React Cache for Server Components
 import { createClient } from '@/app/utils/supabase/server';
 import { SessionCache } from './performance';
+import { cache } from 'react';
 
 export type UserRole = 'owner' | 'admin' | 'member' | 'viewer';
 
@@ -30,14 +31,8 @@ export interface OrganizationInfo {
   org_slug: string;
 }
 
-// Optimized function using session storage first, database as fallback
-export async function getUserPermissions(orgId: string, userId: string): Promise<UserPermissions> {
-  // Try to get from session storage first
-  const cachedPermissions = SessionCache.getPermissions(orgId);
-  if (cachedPermissions) {
-    return cachedPermissions as UserPermissions;
-  }
-
+// Optimized function using React cache for server components and session storage for client
+export const getUserPermissions = cache(async (orgId: string, userId: string): Promise<UserPermissions> => {
   const sb = await createClient();
   
   // Use the optimized database function
@@ -98,11 +93,13 @@ export async function getUserPermissions(orgId: string, userId: string): Promise
     canExportLeads: isOrgCreator ? true : basePermissions.canExportLeads!,
   };
 
-  // Cache the permissions in session storage
-  SessionCache.setPermissions(orgId, permissions, userId);
+  // Cache the permissions in session storage (for client-side usage)
+  if (typeof window !== 'undefined') {
+    SessionCache.setPermissions(orgId, permissions, userId);
+  }
   
   return permissions;
-}
+});
 
 function getPermissionsByRole(role: UserRole): Partial<UserPermissions> {
   switch (role) {
@@ -184,6 +181,11 @@ function getPermissionsByRole(role: UserRole): Partial<UserPermissions> {
 // Clear session cache when needed (e.g., on logout)
 export function clearPermissionsCache() {
   SessionCache.clearSession();
+}
+
+// Client-side permissions function that uses session cache
+export function getUserPermissionsClient(orgId: string): UserPermissions | null {
+  return SessionCache.getPermissions(orgId) as UserPermissions | null;
 }
 
 // Hook for getting permissions (for client components)

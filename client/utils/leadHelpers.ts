@@ -42,6 +42,11 @@ type RawLead = {
 
 // Helper function to get a meaningful display name from lead field values
 export function getLeadDisplayName(lead: RawLead | Lead): string {
+  // Validate the lead object
+  if (!lead || !lead.id) {
+    return 'Unknown Lead';
+  }
+
   if (!lead.lead_field_values || lead.lead_field_values.length === 0) {
     return `Lead #${lead.id.slice(0, 8)}`;
   }
@@ -106,8 +111,12 @@ export function getLeadDisplayName(lead: RawLead | Lead): string {
     }
   }
 
-  // Fallback to ID
-  return `Lead #${lead.id.slice(0, 8)}`;
+  // Fallback to ID (with additional validation)
+  if (lead.id && typeof lead.id === 'string') {
+    return `Lead #${lead.id.slice(0, 8)}`;
+  }
+  
+  return 'Unknown Lead';
 }
 
 // Helper function to get a specific field value from lead

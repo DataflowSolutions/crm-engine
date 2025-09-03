@@ -5,6 +5,7 @@ import SidebarHamMenu from "@/components/SidebarHamMenu";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
 import { UserProvider } from "@/contexts/UserContext";
+import QueryProvider from "@/components/QueryProvider";
 
 export const metadata: Metadata = {
   title: "CRM - Customer Relationship Management",
@@ -23,24 +24,26 @@ export default async function RootLayout({
     <html lang={locale} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          <UserProvider>
-            <div className="flex min-h-screen">
-              {/* Mobile hamburger menu */}
-              <div className="md:hidden">
-                <SidebarHamMenu />
+          <QueryProvider>
+            <UserProvider>
+              <div className="flex min-h-screen">
+                {/* Mobile hamburger menu */}
+                <div className="md:hidden">
+                  <SidebarHamMenu />
+                </div>
+              
+              {/* Desktop sidebar */}
+              <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 z-40">
+                <OptimizedSidebar />
+              </aside>
+              
+              {/* Main content with proper margin for sidebar */}
+              <div className="flex-1 md:ml-56">
+                {children}
               </div>
-            
-            {/* Desktop sidebar */}
-            <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0 z-40">
-              <OptimizedSidebar />
-            </aside>
-            
-            {/* Main content with proper margin for sidebar */}
-            <div className="flex-1 md:ml-56">
-              {children}
             </div>
-          </div>
-          </UserProvider>
+            </UserProvider>
+          </QueryProvider>
         </NextIntlClientProvider>
       </body>
     </html>

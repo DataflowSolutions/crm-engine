@@ -102,34 +102,40 @@ export async function GET(
     let totalCount = 0;
 
     if (searchTerm) {
-      // Use search function for text searches
-      const { data: searchResults, error: searchError } = await supabase
-        .rpc('search_leads', {
+      // Use client-side filtering for search until database search function is fixed
+      const { data: allLeads, error: allLeadsError } = await supabase
+        .rpc('get_leads_with_fields', {
           p_org_id: orgId,
-          p_search_term: searchTerm,
-          p_status_filter: statusFilter,
-          p_limit: limit,
-          p_offset: offset
+          p_limit: 1000, // Get more results for filtering
+          p_offset: 0,
+          p_status_filter: statusFilter
         }) as { data: LeadWithFieldsResponse[] | null; error: unknown };
 
-      if (searchError) {
-        console.error('Search error:', searchError);
-        return NextResponse.json({ error: "Search failed" }, { status: 500 });
+      if (allLeadsError) {
+        console.error('Error fetching leads for search:', allLeadsError);
+        return NextResponse.json({ error: "Failed to fetch leads for search" }, { status: 500 });
       }
 
-      leads = searchResults || [];
+      // Client-side search filtering
+      const searchTermLower = searchTerm.toLowerCase();
+      const filteredLeads = (allLeads || []).filter(lead => {
+        // Search in status
+        if (lead.status?.toLowerCase().includes(searchTermLower)) {
+          return true;
+        }
+        // Search in field data
+        if (Array.isArray(lead.field_data)) {
+          return lead.field_data.some((field: { value?: string }) => 
+            field.value?.toLowerCase().includes(searchTermLower)
+          );
+        }
+        return false;
+      });
 
-      // Get total count for search
-      const { data: searchCount } = await supabase
-        .rpc('search_leads', {
-          p_org_id: orgId,
-          p_search_term: searchTerm,
-          p_status_filter: statusFilter,
-          p_limit: 1000000, // Large number to get total
-          p_offset: 0
-        }) as { data: LeadWithFieldsResponse[] | null; error: unknown };
-
-      totalCount = searchCount?.length || 0;
+      // Apply pagination to search results
+      const searchStartIndex = offset;
+      leads = filteredLeads.slice(searchStartIndex, searchStartIndex + limit);
+      totalCount = filteredLeads.length;
     } else {
       // Use optimized pagination function
       const { data: paginatedResults, error: paginationError } = await supabase

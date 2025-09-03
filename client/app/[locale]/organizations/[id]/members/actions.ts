@@ -189,7 +189,7 @@ export async function updateMemberRole(orgId: string, membershipId: string, newR
   }
 
   try {
-    // Check permissions (must be org creator or admin)
+    // Check permissions (must be org creator, owner, or admin)
     const { data: permissions } = await sb
       .rpc('get_user_permissions_fast', {
         p_user_id: auth.user.id,
@@ -197,7 +197,7 @@ export async function updateMemberRole(orgId: string, membershipId: string, newR
       })
       .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
 
-    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+    if (!permissions || !(permissions.is_org_creator || permissions.role === 'admin' || permissions.role === 'owner')) {
       throw new Error("Access denied");
     }
 
@@ -231,7 +231,7 @@ export async function removeMember(orgId: string, membershipId: string) {
   }
 
   try {
-    // Check permissions (must be org creator or admin)
+    // Check permissions (must be org creator, owner, or admin)
     const { data: permissions } = await sb
       .rpc('get_user_permissions_fast', {
         p_user_id: auth.user.id,
@@ -239,9 +239,10 @@ export async function removeMember(orgId: string, membershipId: string) {
       })
       .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
 
-    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
-      throw new Error("Access denied");
-    }
+    // Corrected Logic
+if (!permissions || !(permissions.is_org_creator || permissions.role === 'admin' || permissions.role === 'owner')) {
+  throw new Error("Access denied");
+}
 
     // Get membership details to check if it's the org creator
     const { data: membership } = await sb
@@ -410,7 +411,7 @@ export async function resendInvite(orgId: string, membershipId: string) {
   }
 
   try {
-    // Check permissions (must be org creator or admin)
+    // Check permissions (must be org creator, owner, or admin)
     const { data: permissions } = await sb
       .rpc('get_user_permissions_fast', {
         p_user_id: auth.user.id,
@@ -418,7 +419,7 @@ export async function resendInvite(orgId: string, membershipId: string) {
       })
       .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
 
-    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+    if (!permissions || !(permissions.is_org_creator || permissions.role === 'admin' || permissions.role === 'owner')) {
       throw new Error("Access denied");
     }
 
@@ -477,7 +478,7 @@ export async function revokeInvite(orgId: string, membershipId: string) {
   }
 
   try {
-    // Check permissions (must be org creator or admin)
+    // Check permissions (must be org creator, owner, or admin)
     const { data: permissions } = await sb
       .rpc('get_user_permissions_fast', {
         p_user_id: auth.user.id,
@@ -485,7 +486,7 @@ export async function revokeInvite(orgId: string, membershipId: string) {
       })
       .single() as { data: { role: string; is_org_creator: boolean } | null; error: unknown };
 
-    if (!permissions || (!permissions.is_org_creator && permissions.role !== 'admin')) {
+    if (!permissions || !(permissions.is_org_creator || permissions.role === 'admin' || permissions.role === 'owner')) {
       throw new Error("Access denied");
     }
 
